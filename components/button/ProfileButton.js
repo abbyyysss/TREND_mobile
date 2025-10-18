@@ -22,7 +22,7 @@ export default function ProfileButton() {
   // Mock user data for UI purposes
   const username = 'John Doe';
   const role = 'User';
-  const profilePhoto = require('@/public/assets/images/Profile/default-profile-photo.jpg');
+  const profilePhoto = require('@/assets/images/Profile/default-profile-photo.jpg');
 
   const handleMenuClose = (action) => {
     setMenuOpen(false);

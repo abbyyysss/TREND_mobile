@@ -12,10 +12,10 @@ export default function MainHeader() {
   const isDark = colorScheme === 'dark';
 
   const navItems = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Guest Log', href: '/guest-log' },
-    { label: 'Reports Management', href: '/reports-management' },
-    { label: 'Profile', href: '/profile' },
+    { label: 'Dashboard', href: '(main)/dashboard' },
+    { label: 'Guest Log', href: '(main)/guest-log' },
+    { label: 'Reports Management', href: '(main)/reports-management' },
+    { label: 'Profile', href: '(main)/profile' },
   ];
 
   const currentNav = navItems.find(item => pathname?.startsWith(item.href));

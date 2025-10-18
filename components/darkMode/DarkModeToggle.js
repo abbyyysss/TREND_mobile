@@ -11,7 +11,7 @@ const DarkModeToggle = ({ isDark, onToggle }) => {
     >
       <Ionicons 
         name={isDark ? 'moon' : 'sunny'} 
-        size={24} 
+        size={30} 
         color={isDark ? '#facc15' : '#fcd34d'} 
       />
     </TouchableOpacity>

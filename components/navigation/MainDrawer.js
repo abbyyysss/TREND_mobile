@@ -71,7 +71,7 @@ export default function MainDrawer() {
               { backgroundColor: isDark ? '#000000' : '#ffffff' }
             ]}>
               <Image
-                source={require('@/public/assets/images/TREND/trend.webp')}
+                source={require('@/assets/images/TREND/trend.webp')}
                 style={styles.logo}
                 resizeMode="contain"
               />

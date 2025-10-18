@@ -7,6 +7,7 @@ const LoginTitle = ({ children, style }) => {
 
 const styles = StyleSheet.create({
   title: {
+    textAlign: 'center',
     color: '#FFF',
     fontSize: 28,
     fontWeight: '700',
