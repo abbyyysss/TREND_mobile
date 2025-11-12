@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileButton() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [buttonLayout, setButtonLayout] = useState(null);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const pathname = usePathname();
@@ -22,19 +23,19 @@ export default function ProfileButton() {
   // Mock user data for UI purposes
   const username = 'John Doe';
   const role = 'User';
-  const profilePhoto = require('@/assets/images/Profile/default-profile-photo.jpg');
+  const profilePhoto = require('@/assets/images/Profile/default-profile-photo.png');
 
   const handleMenuClose = (action) => {
     setMenuOpen(false);
     
     if (action === 'logout') {
-      router.push('/login');
+      router.push('/(login)/login');
       return;
     }
 
     if (action === 'profile') {
       if (pathname !== '/profile') {
-        router.push('/profile');
+        router.push('/(main)/profile');
       }
     }
   };
@@ -47,6 +48,10 @@ export default function ProfileButton() {
         style={styles.profileContainer}
         onPress={() => setMenuOpen(true)}
         activeOpacity={0.7}
+        onLayout={(event) => {
+          const layout = event.nativeEvent.layout;
+          setButtonLayout(layout);
+        }}
       >
         <Image
           source={profilePhoto}
@@ -75,7 +80,7 @@ export default function ProfileButton() {
 
       <Modal
         visible={menuOpen}
-        animationType="fade"
+        animationType="none"
         transparent={true}
         onRequestClose={() => setMenuOpen(false)}
       >
@@ -83,12 +88,16 @@ export default function ProfileButton() {
           style={styles.modalOverlay}
           onPress={() => setMenuOpen(false)}
         >
-          <Pressable 
+          <View 
             style={[
               styles.menuContainer,
-              { backgroundColor: isDark ? '#000000' : '#ffffff' }
+              { 
+                backgroundColor: isDark ? '#000000' : '#ffffff',
+                position: 'absolute',
+                top: buttonLayout ? buttonLayout.y + buttonLayout.height : 0,
+                right: 16,
+              }
             ]}
-            onPress={(e) => e.stopPropagation()}
           >
             <TouchableOpacity
               style={[
@@ -128,7 +137,7 @@ export default function ProfileButton() {
                 Logout
               </Text>
             </TouchableOpacity>
-          </Pressable>
+          </View>
         </Pressable>
       </Modal>
     </>
@@ -153,16 +162,16 @@ const styles = StyleSheet.create({
     maxWidth: 100,
   },
   username: {
-    fontSize: 12,
+    fontSize: 14,
   },
   role: {
-    fontSize: 12,
+    fontSize: 14,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'transparent',
+    marginTop: 70,
+    marginRight: 130,
   },
   menuContainer: {
     minWidth: 170,

@@ -28,7 +28,7 @@ export default function GuestLogSetup() {
       />
       <DefaultButton 
         onPress={() => router.push('/register/finishing-up')}
-        title="Submit" 
+        label="Submit" 
       />
       <BackButton 
         onPress={() => router.push('/register/star-rating')}

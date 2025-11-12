@@ -17,7 +17,7 @@ export default function FinishingUp() {
       </Text>
       <DefaultButton 
         onPress={() => router.push('/register/success')}
-        title="Next" 
+        label="Next" 
       />
       <BackButton 
         onPress={() => router.push('/register/guest-log-setup')}

@@ -89,11 +89,11 @@ export default function Accreditation() {
       
       <DefaultButton 
         onPress={() => router.push('/register/star-rating')}
-        title="Next" 
+        label="Next" 
       />
       
       <BackButton 
-        onPress={() => router.push('/register/room-setup')}
+        onPress={() => router.push('/register/contact-address')}
         label="Back"
       />
     </ScrollView>

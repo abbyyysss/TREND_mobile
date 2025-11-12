@@ -98,7 +98,7 @@ export default function ContactAddress() {
 
       <DefaultButton
         onPress={() => router.push('/register/accreditation')}
-        title="Next"
+        label="Next"
       />
 
       <BackButton

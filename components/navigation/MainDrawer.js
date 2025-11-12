@@ -9,16 +9,16 @@ import {
   Image,
   useColorScheme,
   Pressable,
-  Animated,
 } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ProfileButton from '@/components/button/ProfileButton';
+import NavIcon from '@/components/icon/NavIcon';
 
 const navItems = [
-  { label: 'Dashboard', icon: 'grid-outline', href: '/dashboard' },
-  { label: 'Guest Log', icon: 'people-outline', href: '/guest-log' },
-  { label: 'Reports Management', icon: 'document-text-outline', href: '/reports-management' },
+  { label: 'Dashboard', icon: require('@/assets/images/NavIcons/dashboard.webp'), href: '/(main)/dashboard' },
+  { label: 'Guest Log', icon: require('@/assets/images/NavIcons/guestLog.png'), href: '/(main)/guest-log' },
+  { label: 'Reports Management', icon: require('@/assets/images/NavIcons/reportsMgmt.png'), href: '/(main)/reports-management' },
 ];
 
 export default function MainDrawer() {
@@ -109,11 +109,11 @@ export default function MainDrawer() {
                     ]}
                     activeOpacity={0.7}
                   >
-                    <Ionicons
-                      name={item.icon}
-                      size={20}
-                      color={isDark ? '#e5e7eb' : '#313638'}
-                      style={styles.navIcon}
+                    <NavIcon
+                      source={item.icon}
+                      alt={item.label}
+                      size={30}
+                      style={styles.navIconSpacing}
                     />
                     <Text
                       style={[
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
   },
-   logo: {
+  logo: {
     width: 120,
     height: 65,
   },
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   navItemActive: {
     backgroundColor: 'rgba(212, 175, 55, 0.6)',
   },
-  navIcon: {
+  navIconSpacing: {
     marginRight: 12,
   },
   navText: {

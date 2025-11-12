@@ -80,7 +80,7 @@ const LoginPage = () => {
 
       {/* Login Button */}
       <DefaultButton
-        title="Log In"
+        label="Log In"
         onPress={handleLogin}
         loading={loading}
         style={styles.loginButton}
@@ -151,6 +151,7 @@ const styles = StyleSheet.create({
     color: '#4A9EFF',
     fontSize: 14,
     fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
 

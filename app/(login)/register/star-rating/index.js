@@ -97,7 +97,7 @@ export default function StarRating() {
       
       <DefaultButton 
         onPress={() => router.push('/register/guest-log-setup')}
-        title="Next" 
+        label="Next" 
       />
       
       <BackButton 

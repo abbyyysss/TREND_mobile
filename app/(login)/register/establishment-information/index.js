@@ -107,7 +107,7 @@ export default function EstablishmentInformation() {
 
       <DefaultButton 
         onPress={handleNext}
-        title="Next" 
+        label="Next" 
         style={styles.nextButton}
       />
 
