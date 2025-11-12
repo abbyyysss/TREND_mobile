@@ -69,7 +69,7 @@ export default function ChangePasswordPage() {
 
       <View style={styles.buttonSection}>
         <DefaultButton
-          title="Continue"
+          label="Continue"
           onPress={handleContinue}
           loading={loading}
           style={styles.continueButton}

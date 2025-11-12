@@ -63,7 +63,7 @@ const ForgotPasswordPage = () => {
 
       {/* Request Button */}
       <DefaultButton
-        title="Request Email Link"
+        label="Request Email Link"
         onPress={handleRequestReset}
         loading={loading}
         style={styles.requestButton}

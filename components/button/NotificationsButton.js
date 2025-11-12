@@ -29,6 +29,7 @@ export default function NotificationsButton() {
   const isDark = colorScheme === 'dark';
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [buttonLayout, setButtonLayout] = useState(null);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
   const filteredNotifications = filter === 'unread'
@@ -40,10 +41,14 @@ export default function NotificationsButton() {
       <TouchableOpacity 
         onPress={() => setOpen(true)}
         style={styles.iconButton}
+        onLayout={(event) => {
+          const layout = event.nativeEvent.layout;
+          setButtonLayout(layout);
+        }}
       >
         <View style={styles.badgeContainer}>
           <Ionicons
-            name="notifications-outline"
+            name="notifications"
             size={28}
             color={isDark ? '#e5e7eb' : '#313638'}
           />
@@ -57,7 +62,7 @@ export default function NotificationsButton() {
 
       <Modal
         visible={open}
-        animationType="fade"
+        animationType="none"
         transparent={true}
         onRequestClose={() => setOpen(false)}
       >
@@ -65,10 +70,15 @@ export default function NotificationsButton() {
           style={styles.modalOverlay}
           onPress={() => setOpen(false)}
         >
-          <Pressable 
+          <Pressable
             style={[
               styles.modalContent,
-              { backgroundColor: isDark ? '#0B0B0B' : '#F4F4F4' }
+              { 
+                backgroundColor: isDark ? '#0B0B0B' : '#F4F4F4',
+                position: 'absolute',
+                top: buttonLayout ? buttonLayout.y + buttonLayout.height - 18 : 0,
+                right: 4,
+              }
             ]}
             onPress={(e) => e.stopPropagation()}
           >
@@ -189,13 +199,11 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   modalContent: {
-    width: 350,
-    height: 500,
+    width: 250,
+    height: 350,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#DADADA',
@@ -243,6 +251,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
+    maxHeight: 400,
   },
   listContent: {
     padding: 12,

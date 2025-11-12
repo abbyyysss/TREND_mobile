@@ -29,7 +29,7 @@ export default function Register() {
       
       <DefaultButton 
         onPress={() => router.push('/register/establishment-information')}
-        title="Next"
+        label="Next"
       />
       
       <BackButton 

@@ -4,7 +4,6 @@ import { usePathname } from 'expo-router';
 import DarkModeToggle from '@/components/darkMode/DarkModeToggle';
 import MainDrawer from '@/components/navigation/MainDrawer';
 import NotificationsButton from '@/components/button/NotificationsButton';
-import ProfileButton from '@/components/button/ProfileButton';
 
 export default function MainHeader() {
   const pathname = usePathname();
@@ -12,14 +11,26 @@ export default function MainHeader() {
   const isDark = colorScheme === 'dark';
 
   const navItems = [
-    { label: 'Dashboard', href: '(main)/dashboard' },
-    { label: 'Guest Log', href: '(main)/guest-log' },
-    { label: 'Reports Management', href: '(main)/reports-management' },
-    { label: 'Profile', href: '(main)/profile' },
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Guest Log', href: '/guest-log' },
+    { label: 'Reports Management', href: '/reports-management' },
+    { label: 'Profile', href: '/profile' },
   ];
 
   const currentNav = navItems.find(item => pathname?.startsWith(item.href));
   const pageTitle = currentNav ? currentNav.label.toUpperCase() : 'TREND';
+
+  // Adjust font size based on title length
+  const getFontSize = () => {
+    if (pageTitle.length > 15) return 16;
+    if (pageTitle.length > 10) return 18;
+    return 20;
+  };
+
+  // Add extra margin when title is long
+  const getRightSectionMargin = () => {
+    return pageTitle.length > 15 ? 10 : 0;
+  };
 
   return (
     <View style={[styles.container, { borderBottomColor: '#C0BFBF' }]}>
@@ -28,19 +39,21 @@ export default function MainHeader() {
         <Text 
           style={[
             styles.title,
-            { color: isDark ? '#e5e7eb' : '#313638' }
+            { 
+              color: isDark ? '#e5e7eb' : '#313638',
+              fontSize: getFontSize()
+            }
           ]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
         >
           {pageTitle}
         </Text>
       </View>
       
-      <View style={styles.rightSection}>
+      <View style={[styles.rightSection, { marginRight: getRightSectionMargin() }]}>
         <DarkModeToggle />
         <NotificationsButton />
-        <View style={styles.profileContainer}>
-          <ProfileButton />
-        </View>
       </View>
     </View>
   );
@@ -60,10 +73,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
+    flex: 1,
   },
   title: {
-    fontSize: 20,
     fontWeight: 'bold',
+    flexShrink: 1,
   },
   rightSection: {
     flexDirection: 'row',

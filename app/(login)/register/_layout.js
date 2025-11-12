@@ -6,7 +6,7 @@ import RegisterProgressNav from '@/components/navigation/RegisterProgressNav';
 const stepMap = {
   '/register': { step: '1/7', title: 'ACCOUNT SETUP' },
   '/register/establishment-information': { step: '2/7', title: 'ESTABLISHMENT INFORMATION' },
-  '/register/contact-address': { step: '3/7', title: 'CONTACT ADDRESS' },
+  '/register/contact-address': { step: '3/7', title: 'CONTACT AND ADDRESS' },
   '/register/accreditation': { step: '4/7', title: 'ACCREDITATION' },
   '/register/star-rating': { step: '5/7', title: 'STAR RATING' },
   '/register/guest-log-setup': { step: '6/7', title: 'GUEST LOG SETUP' },
