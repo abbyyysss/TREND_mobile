@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import { useColorScheme } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import { useTheme } from '@/assets/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function UploadButton({
@@ -14,14 +15,8 @@ export default function UploadButton({
   accept = 'all', // 'image', 'pdf', 'all'
   style,
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const {colors, fonts, isDark} = useTheme();
 
-  const colors = {
-    text: isDark ? '#d2d2d2' : '#1e1e1e',
-    border: isDark ? '#fff' : '#000',
-    hoverBg: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-  };
 
   const handlePress = async () => {
     try {
@@ -89,16 +84,16 @@ export default function UploadButton({
     <TouchableOpacity
       style={[
         styles.container,
-        { borderColor: colors.border },
+        { borderColor: colors.border, backgroundColor: colors.surface },
         style,
       ]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
       <Ionicons name={iconName} size={60} color={colors.text} />
-      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text, fontFamily: fonts.gotham }]}>{label}</Text>
       {withHelperText && (
-        <Text style={[styles.helperText, { color: colors.text }]}>
+        <Text style={[styles.helperText, { color: colors.text, fontFamily: fonts.gotham }]}>
           PDF, JPG, PNG
         </Text>
       )}

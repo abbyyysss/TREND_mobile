@@ -4,35 +4,97 @@ import {
   StyleSheet, 
   Text,
   ScrollView,
-  useColorScheme
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import DefaultButton from '@/components/button/DefaultButton';
 import BackButton from '@/components/button/BackButton';
 import LoginTitle from '@/components/text/LoginTitle';
 import MainTextInput from '@/components/input/MainTextInput';
+import { useTheme } from '@/assets/theme/ThemeContext';
+import { requestPasswordReset } from '@/services/AuthService';
 
-const ForgotPasswordPage = () => {
+const ForgotPassword = () => {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts, isDark } = useTheme();
   
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRequestReset = () => {
-    setLoading(true);
-    // Simulate password reset request
-    setTimeout(() => {
+  const handleRequestReset = async () => {
+    // Clear inline error
+    setEmailError('');
+
+    // Basic validation
+    if (!email.trim()) {
+      setEmailError('Please enter your email.');
+      return;
+    }
+
+    // Simple email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await requestPasswordReset(email);
+
+      // Save email in AsyncStorage for use in Check Email page
+      await AsyncStorage.setItem('reset_email', email);
+
+      // Show success alert
+      Alert.alert(
+        'Success',
+        res.detail || 'Password reset link sent successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.push('/forgot-password/check-email'),
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Password reset error:', error);
+      const msg = error.response?.data?.error || 'Something went wrong. Please try again.';
+      
+      // Show error alert
+      Alert.alert('Error', msg);
+    } finally {
       setLoading(false);
-      console.log('Password reset requested for:', email);
-      router.push('/(login)/forgot-password/check-email');
-    }, 2000);
+    }
   };
 
   const handleBackToLogin = () => {
-    router.push('/(login)/login');
+    router.push('/login');
   };
+
+  const styles = StyleSheet.create({
+    scrollView: {
+      flex: 1,
+    },
+    container: {
+      marginTop: 50,
+      padding: 28,
+      flexGrow: 1,
+    },
+    subtitle: {
+      fontSize: 14,
+      textAlign: 'center',
+      marginBottom: 32,
+      lineHeight: 20,
+      fontFamily: fonts.gotham,
+      color: colors.textSecondary,
+    },
+    requestButton: {
+      marginBottom: 24,
+      marginTop: 8,
+    },
+  });
 
   return (
     <ScrollView 
@@ -42,12 +104,12 @@ const ForgotPasswordPage = () => {
       keyboardShouldPersistTaps="handled"
     >
       {/* Title */}
-      <LoginTitle style={[styles.title, isDark && styles.titleDark]}>
+      <LoginTitle>
         FORGOT PASSWORD?
       </LoginTitle>
 
       {/* Subtitle */}
-      <Text style={[styles.subtitle, isDark && styles.subtitleDark]}>
+      <Text style={styles.subtitle}>
         Enter your email address to receive a password reset link.
       </Text>
 
@@ -55,17 +117,20 @@ const ForgotPasswordPage = () => {
       <MainTextInput
         label="Email"
         value={email}
-        onChangeText={setEmail}
+        onChange={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
+        error={emailError}
+        helperText={emailError}
       />
 
       {/* Request Button */}
       <DefaultButton
-        label="Request Email Link"
+        label={loading ? 'Sending...' : 'Request Email Link'}
         onPress={handleRequestReset}
         loading={loading}
+        disabled={loading}
         style={styles.requestButton}
       />
 
@@ -78,46 +143,4 @@ const ForgotPasswordPage = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    marginTop: 50,
-    padding: 28,
-    flexGrow: 1,
-    padding: 20,
-  },
-  iconContainer: {
-    alignItems: 'flex-end',
-    marginBottom: 20,
-  },
-  icon: {
-    fontSize: 32,
-  },
-  title: {
-    fontSize: 23,
-    marginBottom: 16,
-    color: '#000',
-    textAlign: 'center',
-  },
-  titleDark: {
-    color: '#FFF',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 20,
-  },
-  subtitleDark: {
-    color: '#CCC',
-  },
-  requestButton: {
-    marginBottom: 24,
-    marginTop: 8,
-  },
-});
-
-export default ForgotPasswordPage;
+export default ForgotPassword;

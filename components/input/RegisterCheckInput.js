@@ -1,33 +1,25 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function RegisterCheckInput({ text, value, onChange }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  const colors = {
-    text: isDark ? '#d2d2d2' : '#1e1e1e',
-    subText: '#828282',
-    divider: '#D9D9D9',
-    checkbox: value ? '#2196F3' : 'transparent',
-    border: isDark ? '#666' : '#999',
-  };
+  const {fonts, colors, isDark} = useTheme();
 
   return (
     <View style={styles.checkContainer}>
       <View style={styles.row}>
         <TouchableOpacity
-          style={[styles.checkbox, { borderColor: colors.border, backgroundColor: colors.checkbox }]}
+          style={[styles.checkbox, { borderColor: colors.border, backgroundColor: value ? colors.checkboxChecked :' transparent' }]}
           onPress={() => onChange(!value)}
           activeOpacity={0.7}
         >
           {value && <Text style={styles.checkmark}>✓</Text>}
         </TouchableOpacity>
-        <Text style={[styles.checkText, { color: colors.text }]}>{text}</Text>
+        <Text style={[styles.checkText, { color: colors.text, fontFamily: fonts.gotham }]}>{text}</Text>
       </View>
-      <View style={[styles.divider, { backgroundColor: colors.divider }]} />
-      <Text style={[styles.helperText, { color: colors.subText }]}>
-        *Leave unchecked if not applicable. You can still proceed with the registration.
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
+      <Text style={[styles.helperText, { color: colors.textSecondary, fontFamily: fonts.gotham }]}>
+        *Leave unchecked if not star rated. You can still proceed with the registration.
       </Text>
     </View>
   );

@@ -4,22 +4,23 @@ import { useRouter } from 'expo-router';
 import MainSelectInput from '@/components/input/MainSelectInput';
 import DefaultButton from '@/components/button/DefaultButton';
 import BackButton from '@/components/button/BackButton';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
-export default function GuestLogSetup() {
+export default function ReportingMode() {
   const router = useRouter();
+  const { colors, fonts } = useTheme();
+
   const [frequency, setFrequency] = useState('');
 
   const frequencyOptions = [
-    { value: 'hotel', label: 'Hotel' },
-    { value: 'municipal-office', label: 'Municipal Office' },
-    { value: 'provincial-office', label: 'Provincial Office' },
-    { value: 'regional-office', label: 'Regional Office' },
+    { value: 'DAILY', label: 'Daily' },
+    { value: 'MONTHLY', label: 'Monthly' }
   ];
 
   return (
     <View style={styles.container}>
       <MainSelectInput 
-        label="Preferred Logging Frequency"
+        label="Choose your preferred reporting mode"
         value={frequency}
         onChange={setFrequency}
         options={frequencyOptions}

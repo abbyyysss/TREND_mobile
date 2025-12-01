@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function MainPasswordInput({
   label,
@@ -14,8 +14,7 @@ export default function MainPasswordInput({
   disabled = false,
   ...props
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, isDark, fonts } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const animatedLabel = useRef(new Animated.Value(value ? 1 : 0)).current;
@@ -28,20 +27,12 @@ export default function MainPasswordInput({
     }).start();
   }, [isFocused, value]);
 
-  const colors = {
-    text: isDark ? '#d2d2d2' : '#1e1e1e',
-    inputLabel: isDark ? '#999' : '#666',
-    border: isDark ? '#d2d2d2' : '#1e1e1e',
-    labelFocused: isDark ? '#d2d2d2' : '#1e1e1e',
-    icon: isDark ? '#d2d2d2' : '#1e1e1e',
-  };
-
   const labelStyle = {
     position: 'absolute',
     left: 0,
     top: animatedLabel.interpolate({
       inputRange: [0, 1],
-      outputRange: [18, -20],
+      outputRange: [18, 0],
     }),
     fontSize: animatedLabel.interpolate({
       inputRange: [0, 1],
@@ -49,10 +40,10 @@ export default function MainPasswordInput({
     }),
     color: animatedLabel.interpolate({
       inputRange: [0, 1],
-      outputRange: [colors.inputLabel, colors.labelFocused],
+      outputRange: [colors.textSecondary, isFocused ? colors.primary : colors.textSecondary],
     }),
     fontWeight: '500',
-    fontFamily: 'System',
+    fontFamily: fonts.gotham,
   };
 
   return (
@@ -67,13 +58,13 @@ export default function MainPasswordInput({
         ]}
       >
         <TextInput
-          style={[passwordStyles.input, { color: colors.text }]}
+          style={[passwordStyles.input, { color: colors.placeholder, fontFamily: fonts.gotham }]}
           value={value}
           onChangeText={onChangeText}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder={isFocused ? placeholder : ''}
-          placeholderTextColor={colors.inputLabel}
+          placeholderTextColor={colors.placeholder}
           secureTextEntry={!showPassword}
           editable={!disabled}
           {...props}
@@ -86,12 +77,15 @@ export default function MainPasswordInput({
           <Ionicons
             name={showPassword ? 'eye' : 'eye-off'}
             size={24}
-            color={colors.icon}
+            color={colors.text}
           />
         </TouchableOpacity>
       </View>
       {helperText && (
-        <Text style={[passwordStyles.helperText, error && passwordStyles.errorText]}>
+        <Text style={[
+          passwordStyles.helperText, 
+          { color: error ? '#f44336' : colors.textSecondary, fontFamily: fonts.gotham }
+        ]}>
           {helperText}
         </Text>
       )}
@@ -124,10 +118,6 @@ const passwordStyles = StyleSheet.create({
   helperText: {
     fontSize: 12,
     marginTop: 4,
-    color: '#666',
     fontFamily: 'System',
-  },
-  errorText: {
-    color: '#f44336',
   },
 });

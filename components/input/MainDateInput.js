@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, StyleSheet, useColorScheme } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTheme } from '@/assets/theme/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function MainDateInput({
@@ -11,17 +12,9 @@ export default function MainDateInput({
   variant = 'standard',
   disabled = false,
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const {colors, fonts, isDark} = useTheme();
   const [show, setShow] = useState(false);
 
-  const colors = {
-    text: isDark ? '#d2d2d2' : '#1e1e1e',
-    inputLabel: isDark ? '#999' : '#666',
-    border: isDark ? '#d2d2d2' : '#1e1e1e',
-    placeholder: isDark ? '#666' : '#999',
-    disabled: isDark ? '#666' : '#ccc',
-  };
 
   const handleChange = (event, selectedDate) => {
     setShow(Platform.OS === 'ios');
@@ -56,7 +49,7 @@ export default function MainDateInput({
   return (
     <View style={styles.dateContainer}>
       {label && (
-        <Text style={[styles.dateLabel, { color: colors.inputLabel }]}>{label}</Text>
+        <Text style={[styles.dateLabel, { color: colors.text, fontFamily: fonts.gotham}]}>{label}</Text>
       )}
       <TouchableOpacity
         style={[
@@ -70,7 +63,7 @@ export default function MainDateInput({
       >
         <Text style={[
           styles.dateInputText, 
-          { color: value ? colors.text : colors.placeholder }
+          { color: value ? colors.text : colors.placeholder, fontFamily: fonts.gotham }
         ]}>
           {displayValue}
         </Text>

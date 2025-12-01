@@ -8,11 +8,11 @@ import UploadFileCard from '@/components/card/UploadFileCard';
 import DefaultButton from '@/components/button/DefaultButton';
 import BackButton from '@/components/button/BackButton';
 import LoginTitle from '@/components/text/LoginTitle';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function EstablishmentInformation() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts } = useTheme();
 
   const [lguCode, setLguCode] = useState('');
   const [anotherCode, setAnotherCode] = useState('');
@@ -29,11 +29,11 @@ export default function EstablishmentInformation() {
   ];
 
   const handleNext = () => {
-    router.push('/(login)/register/contact-address');
+    router.push('/register/contact-address');
   };
 
   const handleBack = () => {
-    router.push('/(login)');
+    router.push('/login');
   };
 
   const handleFileSelect = (file) => {
@@ -55,10 +55,16 @@ export default function EstablishmentInformation() {
       />
 
       <MainTextInput 
-        label="LGU assign AE ID code"
-        value={anotherCode}
-        onChangeText={setAnotherCode}
-      />
+          label="Establishment Name"
+          value={lguCode}
+          onChangeText={setLguCode}
+        />
+
+      <MainTextInput 
+          label="Business Name"
+          value={lguCode}
+          onChangeText={setLguCode}
+        />
 
       <MainSelectInput 
         label="Type of accommodation"
@@ -75,17 +81,24 @@ export default function EstablishmentInformation() {
       />
 
       <MainTextInput 
-        label="No. of employees"
+        label="No. of male employees"
+        value={numEmployees}
+        onChangeText={setNumEmployees}
+        keyboardType="numeric"
+      />
+
+      <MainTextInput 
+        label="No. of female employees"
         value={numEmployees}
         onChangeText={setNumEmployees}
         keyboardType="numeric"
       />
 
       <View style={styles.proofSection}>
-        <Text style={[styles.proofTitle, isDark && styles.proofTitleDark]}>
+        <Text style={[styles.proofTitle, { color: colors.text, fontFamily: fonts.gotham }]}>
           Proof of business
         </Text>
-        <Text style={[styles.proofDescription, isDark && styles.proofDescriptionDark]}>
+        <Text style={[styles.proofDescription,{ color: colors.textSecondary, fontFamily: fonts.gotham }]}>
           DTI permit, SEC registration, LGU permits, Mayor's permit. Either one of those options are valid. Only one document should be submitted
         </Text>
       </View>

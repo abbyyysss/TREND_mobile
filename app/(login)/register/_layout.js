@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, useColorScheme, ScrollView } from 'react-native
 import { usePathname } from 'expo-router';
 import { Slot } from 'expo-router';
 import RegisterProgressNav from '@/components/navigation/RegisterProgressNav';
+import { useTheme } from '@/assets/theme/ThemeContext';   
 
 const stepMap = {
   '/register': { step: '1/7', title: 'ACCOUNT SETUP' },
@@ -9,14 +10,13 @@ const stepMap = {
   '/register/contact-address': { step: '3/7', title: 'CONTACT AND ADDRESS' },
   '/register/accreditation': { step: '4/7', title: 'ACCREDITATION' },
   '/register/star-rating': { step: '5/7', title: 'STAR RATING' },
-  '/register/guest-log-setup': { step: '6/7', title: 'GUEST LOG SETUP' },
+  '/register/reporting-mode': { step: '6/7', title: 'GUEST LOG SETUP' },
   '/register/finishing-up': { step: '7/7', title: 'FINISHING UP' },
 };
 
 export default function RegisterLayout() {
   const pathname = usePathname();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts, isDark, radius, spacing } = useTheme();
   const currentStep = stepMap[pathname] || { step: '', title: '' };
 
   // These routes should hide the header and title
@@ -35,20 +35,22 @@ export default function RegisterLayout() {
       {!hideLayoutElements ? (
         <View style={[
           styles.contentWrapper,
-          isDark ? styles.borderDark : styles.borderLight
+          colors.border && { borderTopColor: colors.border}
         ]}>
           <Text style={[
             styles.stepText,
-            isDark ? styles.textDark : styles.textLight
+            {color: colors.textSecondary},
+            {fontFamily: fonts.gotham}
           ]}>
             Step {currentStep.step}
           </Text>
           
           <Text style={[
             styles.titleText,
-            isDark ? styles.textDark : styles.textLight
+            {color: colors.text,
+            fontFamily: fonts.barabara},
           ]}>
-            {currentStep.title}
+            {currentStep.title }
           </Text>
           
           <Slot />
@@ -82,12 +84,6 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     gap: 15,
   },
-  borderLight: {
-    borderTopColor: '#C0BFBF',
-  },
-  borderDark: {
-    borderTopColor: '#4A4A4A',
-  },
   stepText: {
     fontSize: 14,
   },
@@ -95,12 +91,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     letterSpacing: 1,
-  },
-  textLight: {
-    color: '#000',
-  },
-  textDark: {
-    color: '#fff',
   },
   centeredContent: {
     flex: 1,

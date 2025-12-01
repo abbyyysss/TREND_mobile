@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import LoginTitle from '@/components/text/LoginTitle';
+import { useTheme } from '@/assets/theme/ThemeContext';
 import BackButton from '@/components/button/BackButton';
+
 
 export default function RegistrationSuccess() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts } = useTheme();
 
   return (
     <View style={styles.container}>
@@ -21,7 +22,7 @@ export default function RegistrationSuccess() {
           text="REGISTRATION COMPLETE!" 
           textPos="center"
         />
-        <Text style={[styles.description, isDark && styles.descriptionDark]}>
+        <Text style={[styles.description, { color: colors.text, fontFamily: fonts.gotham }]}>
           Thank you for registering. We will email you once your registration is approved.
         </Text>
       </View>
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   iconContainer: {
-    marginBottom: 25,
+    marginBottom: -30,
   },
   textContainer: {
     width: '100%',
@@ -50,12 +51,8 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   description: {
-    color: '#313638',
     fontSize: 20,
     textAlign: 'center',
     lineHeight: 28,
-  },
-  descriptionDark: {
-    color: '#d5d6d7',
   },
 });
