@@ -4,10 +4,21 @@ import MainTextInput from '@/components/input/MainTextInput';
 import MainPasswordInput from '@/components/input/MainPasswordInput';
 import DefaultButton from '@/components/button/DefaultButton';
 import BackButton from '@/components/button/BackButton';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function Register() {
   const router = useRouter();
+  const { colors, fonts } = useTheme();
 
+  const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    gap: 15,
+    padding: 20,
+    color: colors.text
+  },
+});
+  
   return (
     <View style={styles.container}>
       <MainTextInput
@@ -40,10 +51,3 @@ export default function Register() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    gap: 15,
-    padding: 20,
-  },
-});

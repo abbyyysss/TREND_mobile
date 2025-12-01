@@ -8,7 +8,7 @@ import {
   useColorScheme,
 } from 'react-native';
 // import { useAuth } from '@/context/authContext';
-import { AEReportMode } from '@/services/constants';
+// import { AEReportMode } from '@/services/constants';
 
 export default function ReportFilterNav({ activeFilter, onFilterChange }) {
 //   const { user, role } = useAuth();

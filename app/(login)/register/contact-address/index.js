@@ -6,11 +6,12 @@ import MainTextInput from '@/components/input/MainTextInput';
 import MainSelectInput from '@/components/input/MainSelectInput';
 import DefaultButton from '@/components/button/DefaultButton';
 import BackButton from '@/components/button/BackButton';
+import FullUnderlineTitle from '@/components/text/FullUnderlineTitle';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function ContactAddress() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts } = useTheme();
 
   const [contactInfo, setContactInfo] = useState('');
   const [contactPerson, setContactPerson] = useState('');
@@ -44,11 +45,7 @@ export default function ContactAddress() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <MainTextInput
-        label="Contact information"
-        value={contactInfo}
-        onChangeText={setContactInfo}
-      />
+      <FullUnderlineTitle text="Contact information" noUnderline/>
 
       <MainTextInput
         label="Contact person"
@@ -63,11 +60,7 @@ export default function ContactAddress() {
         keyboardType="phone-pad"
       />
 
-      <MainTextInput
-        label="Address"
-        value={address}
-        onChangeText={setAddress}
-      />
+      <FullUnderlineTitle text="Address" noUnderline/>
 
       <MainSelectInput
         label="Province"

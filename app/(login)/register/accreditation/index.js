@@ -5,16 +5,16 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import MainTextInput from '@/components/input/MainTextInput';
 import MainDateInput from '@/components/input/MainDateInput';
-import RegisterCheckInput from '@/components/input/RegisterCheckInput';
+import AccreditedCheckInput from '@/components/input/AccreditedCheckInput';
 import UploadButton from '@/components/button/UploadButton';
 import UploadFileCard from '@/components/card/UploadFileCard';
 import DefaultButton from '@/components/button/DefaultButton';
-import BackButton from '@/components/button/BackButton';
+import BackButton from '@/components/button/BackButton';;
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function Accreditation() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts } = useTheme();
 
   const [controlNumber, setControlNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -49,7 +49,7 @@ export default function Accreditation() {
 
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
-      <RegisterCheckInput 
+      <AccreditedCheckInput 
         text="Is your establishment DOT accredited?" 
         value={isAccredited}
         onChange={setIsAccredited}
@@ -69,7 +69,7 @@ export default function Accreditation() {
         onChange={setExpiryDate}
       />
       
-      <Text style={[styles.heading, isDark && styles.headingDark]}>
+      <Text style={[styles.heading, { color: colors.text, fontFamily: fonts.gotham}]}>
         Upload accreditation certificate
       </Text>
       
@@ -109,11 +109,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   heading: {
-    color: '#1e1e1e',
     fontSize: 18,
     fontWeight: '600',
-  },
-  headingDark: {
-    color: '#d2d2d2',
-  },
+  }
 });

@@ -7,28 +7,37 @@ import {
   Modal,
   ScrollView,
   Image,
-  useColorScheme,
   Pressable,
 } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ProfileButton from '@/components/button/ProfileButton';
 import NavIcon from '@/components/icon/NavIcon';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 const navItems = [
-  { label: 'Dashboard', icon: require('@/assets/images/NavIcons/dashboard.webp'), href: '/(main)/dashboard' },
-  { label: 'Guest Log', icon: require('@/assets/images/NavIcons/guestLog.png'), href: '/(main)/guest-log' },
-  { label: 'Reports Management', icon: require('@/assets/images/NavIcons/reportsMgmt.png'), href: '/(main)/reports-management' },
+  { 
+    label: 'Dashboard', 
+    icon: require('@/assets/images/NavIcons/dashboard.webp'), 
+    href: '/dashboard' 
+  },
+  { 
+    label: 'Guest Log', 
+    icon: require('@/assets/images/NavIcons/guestLog.png'), 
+    href: '/guest-log' 
+  },
+  { 
+    label: 'Reports Management', 
+    icon: require('@/assets/images/NavIcons/reportsMgmt.png'), 
+    href: '/reports-management' 
+  },
 ];
 
 export default function MainDrawer() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  const visibleItems = navItems;
+  const { colors, isDark, fonts } = useTheme();
 
   const handleNavigate = (href) => {
     setDrawerOpen(false);
@@ -44,7 +53,7 @@ export default function MainDrawer() {
         <Ionicons 
           name="menu" 
           size={28} 
-          color={isDark ? '#ffffff' : '#313638'} 
+          color={colors.text} 
         />
       </TouchableOpacity>
 
@@ -61,14 +70,14 @@ export default function MainDrawer() {
           <Pressable 
             style={[
               styles.drawerContainer,
-              { backgroundColor: isDark ? '#000000' : '#ffffff' }
+              { backgroundColor: colors.surface }
             ]}
             onPress={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <View style={[
               styles.drawerHeader,
-              { backgroundColor: isDark ? '#000000' : '#ffffff' }
+              { backgroundColor: colors.surface, borderBottomColor: colors.border }
             ]}>
               <Image
                 source={require('@/assets/images/TREND/trend.webp')}
@@ -82,7 +91,7 @@ export default function MainDrawer() {
                 <Ionicons 
                   name="close" 
                   size={28} 
-                  color={isDark ? '#ffffff' : '#313638'} 
+                  color={colors.text} 
                 />
               </TouchableOpacity>
             </View>
@@ -90,14 +99,17 @@ export default function MainDrawer() {
             {/* Profile Section */}
             <View style={[
               styles.profileSection,
-              { backgroundColor: isDark ? '#000000' : '#ffffff' }
+              { backgroundColor: colors.surface }
             ]}>
               <ProfileButton />
             </View>
 
             {/* Navigation Items */}
-            <ScrollView style={styles.navList}>
-              {visibleItems.map((item) => {
+            <ScrollView 
+              style={styles.navList}
+              showsVerticalScrollIndicator={false}
+            >
+              {navItems.map((item) => {
                 const isActive = pathname?.startsWith(item.href);
                 return (
                   <TouchableOpacity
@@ -118,7 +130,10 @@ export default function MainDrawer() {
                     <Text
                       style={[
                         styles.navText,
-                        { color: isDark ? '#e5e7eb' : '#313638' },
+                        { 
+                          color: colors.text,
+                          fontFamily: fonts.body 
+                        },
                         isActive && styles.navTextActive,
                       ]}
                     >
@@ -160,6 +175,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,
+    borderBottomWidth: 1,
   },
   logo: {
     width: 120,
@@ -169,6 +185,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   profileSection: {
+    paddingVertical: 8,
   },
   navList: {
     flex: 1,
@@ -185,7 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   navItemActive: {
-    backgroundColor: 'rgba(212, 175, 55, 0.6)',
+    backgroundColor: '#D4AF37', // Gold/yellow color like in your screenshot
   },
   navIconSpacing: {
     marginRight: 12,
@@ -195,5 +212,6 @@ const styles = StyleSheet.create({
   },
   navTextActive: {
     fontWeight: 'bold',
+    color: '#000000', // Dark text on gold background
   },
 });

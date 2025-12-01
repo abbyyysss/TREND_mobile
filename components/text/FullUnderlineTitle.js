@@ -1,13 +1,29 @@
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
-export default function FullUnderlineTitle({ text }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+export default function FullUnderlineTitle({ text, noUnderline = false }) {
+  const { fonts, isDark, colors } = useTheme();
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.text, isDark && styles.textDark]}>{text}</Text>
-      <View style={[styles.underline, isDark && styles.underlineDark]} />
+      <Text
+        style={[
+          styles.text,
+          { color: isDark ? colors.text : colors.text },
+          { fontFamily: fonts.gotham }
+        ]}
+      >
+        {text}
+      </Text>
+
+      {!noUnderline && (
+        <View
+          style={[
+            styles.underline,
+            { backgroundColor: isDark ? colors.textSecondary : colors.text }
+          ]}
+        />
+      )}
     </View>
   );
 }
@@ -19,18 +35,11 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
-    color: '#1e1e1e',
-    fontFamily: 'System',
-  },
-  textDark: {
-    color: '#d2d2d2',
+    fontWeight: '600',
   },
   underline: {
     width: '100%',
-    height: 1,
-    backgroundColor: '#1e1e1e',
-  },
-  underlineDark: {
-    backgroundColor: '#d2d2d2',
+    height: 1.5,
+    borderRadius: 10,
   },
 });

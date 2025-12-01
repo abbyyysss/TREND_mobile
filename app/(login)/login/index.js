@@ -4,94 +4,200 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   Text,
-  ScrollView,
-  useColorScheme
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import DefaultButton from '@/components/button/DefaultButton';
 import LoginTitle from '@/components/text/LoginTitle';
 import MainTextInput from '@/components/input/MainTextInput';
 import MainPasswordInput from '@/components/input/MainPasswordInput';
+import { useTheme } from '@/assets/theme/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 
-const LoginPage = () => {
+const Login = () => {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts } = useTheme();
+  const { login } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [serverError, setServerError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const validate = () => {
+    let valid = true;
+    setEmailError('');
+    setPasswordError('');
+    setServerError(null);
+
+    if (!email) {
+      setEmailError('Email is required');
+      valid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError('Invalid email format');
+      valid = false;
+    }
+
+    if (!password) {
+      setPasswordError('Password is required');
+      valid = false;
+    }
+    return valid;
+  };
+
+  const handleLogin = async () => {
+    if (!validate()) return;
+
     setLoading(true);
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      const { ok, data } = await login(email, password);
+
+      if (ok) {
+        // Login successful, router will be handled by auth state change
+        router.replace('/dashboard');
+      } else {
+        // Login failed, show error
+        setServerError(data?.detail || 'Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setServerError('An unexpected error occurred. Please try again.');
+    } finally {
       setLoading(false);
-      console.log('Login attempted with:', { email, password });
-      router.push('/(main)/dashboard');
-    }, 2000);
+    }
   };
 
   const handleForgotPassword = () => {
-    console.log('Forgot password clicked');
-    router.push('../forgot-password');
+    router.push('/forgot-password');
   };
 
   const handleRegister = () => {
-    console.log('Register clicked');
-    router.push('../register');
+    router.push('/register');
   };
+
+  const styles = StyleSheet.create({
+    container: {
+      width: '100%',
+      padding: 28,
+      backgroundColor: colors.background,
+    },
+    title: {
+      marginBottom: 32,
+      color: colors.text,
+    },
+    inputContainer: {
+      marginBottom: 16,
+    },
+    errorText: {
+      color: colors.error || '#ef4444',
+      fontSize: 14,
+      fontFamily: fonts.gotham,
+      marginTop: 8,
+      marginBottom: 16,
+    },
+    forgotPasswordContainer: {
+      alignSelf: 'flex-end',
+      marginBottom: 32,
+      marginTop: 8,
+    },
+    forgotPasswordText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontFamily: fonts.gotham,
+      textDecorationLine: 'underline',
+    },
+    loginButton: {
+      marginBottom: 24,
+    },
+    registerContainer: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 4,
+    },
+    registerText: {
+      color: colors.textSecondary,
+      fontFamily: fonts.gotham,
+      fontSize: 14,
+    },
+    registerLink: {
+      color: colors.primary,
+      fontSize: 14,
+      fontFamily: fonts.gotham,
+      fontWeight: '600',
+      textDecorationLine: 'underline',
+    },
+  });
 
   return (
     <View style={styles.container}>
       {/* Title */}
-      <LoginTitle style={[styles.title, isDark && styles.titleDark]}>
+      <LoginTitle style={styles.title}>
         WELCOME BACK!
       </LoginTitle>
 
       {/* Email Input */}
-      <MainTextInput
-        label="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-      />
+      <View style={styles.inputContainer}>
+        <MainTextInput
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          editable={!loading}
+        />
+        {emailError ? (
+          <Text style={styles.errorText}>{emailError}</Text>
+        ) : null}
+      </View>
 
       {/* Password Input */}
-      <MainPasswordInput
-        label="Password"
-        value={password}
-        onChangeText={setPassword}
-        autoCapitalize="none"
-        autoComplete="password"
-      />
+      <View style={styles.inputContainer}>
+        <MainPasswordInput
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          autoCapitalize="none"
+          autoComplete="password"
+          editable={!loading}
+        />
+        {passwordError ? (
+          <Text style={styles.errorText}>{passwordError}</Text>
+        ) : null}
+      </View>
+
+      {/* Server Error Message */}
+      {serverError && (
+        <Text style={styles.errorText}>{serverError}</Text>
+      )}
 
       {/* Forgot Password */}
       <TouchableOpacity 
         style={styles.forgotPasswordContainer}
         onPress={handleForgotPassword}
+        disabled={loading}
       >
-        <Text style={[styles.forgotPasswordText, isDark && styles.forgotPasswordTextDark]}>
+        <Text style={styles.forgotPasswordText}>
           Forgot password?
         </Text>
       </TouchableOpacity>
 
       {/* Login Button */}
       <DefaultButton
-        label="Log In"
+        label={loading ? "Logging in..." : "Log In"}
         onPress={handleLogin}
         loading={loading}
+        disabled={loading}
         style={styles.loginButton}
       />
 
       {/* Register Link */}
       <View style={styles.registerContainer}>
-        <Text style={[styles.registerText, isDark && styles.registerTextDark]}>
+        <Text style={styles.registerText}>
           Not a member?
         </Text>
-        <TouchableOpacity onPress={handleRegister}>
+        <TouchableOpacity onPress={handleRegister} disabled={loading}>
           <Text style={styles.registerLink}>Register Now</Text>
         </TouchableOpacity>
       </View>
@@ -99,60 +205,4 @@ const LoginPage = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    padding: 28,
-  },
-  iconContainer: {
-    alignItems: 'flex-end',
-    marginBottom: 20,
-    marginTop: 8,
-  },
-  icon: {
-    fontSize: 32,
-  },
-  title: {
-    marginBottom: 32,
-    color: '#000',
-  },
-  titleDark: {
-    color: '#FFF',
-  },
-  forgotPasswordContainer: {
-    alignSelf: 'flex-end',
-    marginBottom: 32,
-    marginTop: 8,
-  },
-  forgotPasswordText: {
-    color: '#333',
-    fontSize: 14,
-    textDecorationLine: 'underline',
-  },
-  forgotPasswordTextDark: {
-    color: '#CCC',
-  },
-  loginButton: {
-    marginBottom: 24,
-  },
-  registerContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 4,
-  },
-  registerText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  registerTextDark: {
-    color: '#999',
-  },
-  registerLink: {
-    color: '#4A9EFF',
-    fontSize: 14,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
-});
-
-export default LoginPage;
+export default Login;

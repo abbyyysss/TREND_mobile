@@ -1,42 +1,42 @@
 import { Slot } from 'expo-router';
 import React from 'react';
-import { View, ScrollView, StatusBar, StyleSheet, useColorScheme } from 'react-native';
+import { View, StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import MainHeader from '@/components/header/MainHeader';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function MainLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  console.log("🟡 Main Layout Rendered");
-
+  const { colors, isDark } = useTheme();
+  
   return (
     <SafeAreaProvider>
       <SafeAreaView 
         style={[
           styles.container,
-          { backgroundColor: isDark ? '#000000' : '#FFFFFF' }
+          { backgroundColor: colors.background }
         ]}
-        edges={['top', 'bottom']}
+        edges={['top']}
       >
         <StatusBar 
           barStyle={isDark ? 'light-content' : 'dark-content'}
-          backgroundColor={isDark ? '#000000' : '#FFFFFF'}
+          backgroundColor={colors.background}
         />
         
-        {/* Fixed Header */}
-        <View style={styles.header}>
+        {/* Fixed Header with Drawer */}
+        <View style={[
+          styles.header, 
+          { 
+            backgroundColor: colors.surface, 
+            borderBottomColor: colors.border 
+          }
+        ]}>
           <MainHeader />
         </View>
-
-        {/* Scrollable Content */}
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={true}
-        >
+        
+        {/* Content Area - Each screen handles its own scrolling */}
+        <View style={styles.content}>
           <Slot />
-        </ScrollView>
+        </View>
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -47,12 +47,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    borderBottomWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
     zIndex: 50,
   },
-  scrollView: {
+  content: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
   },
 });

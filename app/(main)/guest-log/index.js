@@ -9,8 +9,11 @@ import Pagination from "@/components/pagination/Pagination"
 import NoResultsText from "@/components/text/NoResultsText"
 import LoadingOverlay from "@/components/loading/LoadingOverlay"
 import { formatDate } from "@/utils/dateUtils"
+import { useTheme } from '@/assets/theme/ThemeContext';
 
-export default function Index() {
+export default function GuestLog() {
+  const { colors, fonts } = useTheme();
+
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState("add")
   const [selectedRow, setSelectedRow] = useState(null)

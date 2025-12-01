@@ -29,13 +29,13 @@ export default function ProfileButton() {
     setMenuOpen(false);
     
     if (action === 'logout') {
-      router.push('/(login)/login');
+      router.push('/login');
       return;
     }
 
     if (action === 'profile') {
       if (pathname !== '/profile') {
-        router.push('/(main)/profile');
+        router.push('/profile');
       }
     }
   };

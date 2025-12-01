@@ -1,15 +1,15 @@
 import React from 'react';
-import { View, StyleSheet, ImageBackground, useColorScheme } from 'react-native';
+import { View, StyleSheet, ImageBackground } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
 import DarkModeToggle from '@/components/darkMode/DarkModeToggle';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function LoginLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, isDark, radius, spacing } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       
       {/* Background Image - Covers entire screen */}
@@ -25,21 +25,34 @@ export default function LoginLayout() {
 
       {/* Main Content - On top of background */}
       <View style={styles.contentWrapper}>
-        <View style={[styles.contentBox, isDark && styles.contentBoxDark]}>
+        <View style={[
+          styles.contentBox,
+          { 
+            backgroundColor: colors.background,
+            borderColor: colors.border,
+            borderRadius: radius.lg,
+            shadowColor: isDark ? '#000' : colors.border,
+          }
+        ]}>
           {/* Dark Mode Toggle */}
-          <View style={styles.toggleContainer}>
+          <View style={[styles.toggleContainer, { top: spacing.md, right: spacing.md }]}>
             <DarkModeToggle />
           </View>
           
           {/* Routes render here */}
           <View style={styles.stackContainer}>
-            <Stack screenOptions={{ 
-              headerShown: false,
-              contentStyle: { backgroundColor: 'transparent' }
-            }}>
-              <Stack.Screen name="login" />
+            <Stack 
+              screenOptions={{ 
+                headerShown: false,
+                contentStyle: { backgroundColor: 'transparent' }
+              }}
+            >
+              <Stack.Screen name="login/index" />
+              <Stack.Screen name="forgot-password/index" />
+              <Stack.Screen name="forgot-password/change-password/index" />
+              <Stack.Screen name="forgot-password/check-email/index" />
+              <Stack.Screen name="forgot-password/success/index" />
               <Stack.Screen name="register" />
-              <Stack.Screen name="forgot-password" />
             </Stack>
           </View>
         </View>
@@ -51,7 +64,6 @@ export default function LoginLayout() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
-    backgroundColor: '#1a1a1a', // Fallback color
   },
   background: { 
     position: 'absolute', 
@@ -79,25 +91,15 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 450,
     height: '85%',
-    backgroundColor: 'rgba(255, 255, 255, 0.98)', // Increased opacity
-    borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#C0BFBF',
     overflow: 'hidden',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
-  contentBoxDark: {
-    backgroundColor: 'rgba(30, 30, 30, 0.98)', // Changed from black to dark gray
-    borderColor: '#444',
-  },
   toggleContainer: {
     position: 'absolute',
-    top: 16,
-    right: 16,
     zIndex: 20,
   },
   stackContainer: {

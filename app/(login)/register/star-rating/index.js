@@ -9,11 +9,12 @@ import UploadButton from '@/components/button/UploadButton';
 import UploadFileCard from '@/components/card/UploadFileCard';
 import DefaultButton from '@/components/button/DefaultButton';
 import BackButton from '@/components/button/BackButton';
+import { useTheme } from '@/assets/theme/ThemeContext';
+
 
 export default function StarRating() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts } = useTheme();
 
   const [rating, setRating] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -77,7 +78,7 @@ export default function StarRating() {
         onChange={setExpiryDate}
       />
       
-      <Text style={[styles.heading, isDark && styles.headingDark]}>
+      <Text style={[styles.heading, {color: colors.text, fontFamily: fonts.gotham}]}>
         Upload star rating certificate
       </Text>
       

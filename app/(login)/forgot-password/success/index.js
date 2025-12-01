@@ -3,22 +3,20 @@ import {
   View, 
   StyleSheet, 
   Image,
-  Text,
   ScrollView,
-  useColorScheme
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import LoginTitle from '@/components/text/LoginTitle';
 import LoginDescription from '@/components/text/LoginDescription';
 import BackButton from '@/components/button/BackButton';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function PasswordSuccessPage() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts, isDark } = useTheme();
 
   const handleBackToLogin = () => {
-    router.push('/(login)/login');
+    router.push('/login');
   };
 
   return (
@@ -31,17 +29,20 @@ export default function PasswordSuccessPage() {
         <View style={styles.imageContainer}>
           <Image
             source={require('@/assets/images/LoginPage/pw-success.webp')}
-            style={styles.successImage}
+             style={[
+              styles.successImage,
+              isDark && { tintColor: colors.text }
+            ]}
             resizeMode="contain"
           />
         </View>
 
         <View style={styles.textSection}>
-          <LoginTitle style={[styles.title, isDark && styles.titleDark]}>
+          <LoginTitle style={styles.title}>
             PASSWORD UPDATED!
           </LoginTitle>
           <LoginDescription 
-            style={[styles.description, isDark && styles.descriptionDark]}
+            style={{ color: colors.textSecondary }}
             text="You can now log in with your new password."
           />
         </View>
@@ -64,13 +65,6 @@ const styles = StyleSheet.create({
     padding: 28,
     flexGrow: 1,
   },
-  iconContainer: {
-    alignItems: 'flex-end',
-    marginBottom: 20,
-  },
-  icon: {
-    fontSize: 32,
-  },
   contentContainer: {
     alignItems: 'center',
     width: '100%',
@@ -89,18 +83,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 23,
     textAlign: 'center',
-    color: '#000',
     marginBottom: 8,
-  },
-  titleDark: {
-    color: '#FFF',
-  },
-  description: {
-    fontSize: 14,
-    textAlign: 'center',
-    color: '#666',
-  },
-  descriptionDark: {
-    color: '#CCC',
   },
 });
