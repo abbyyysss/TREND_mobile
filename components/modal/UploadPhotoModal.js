@@ -1,37 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
-} from 'react-native';
+import { useState, useRef } from 'react';
+import { View, ScrollView, StyleSheet, Modal } from 'react-native';
+import { useTheme } from '@/assets/theme/ThemeContext';
 import SecondaryModalHeader from '@/components/header/SecondaryModalHeader';
 import DefaultButton from '../button/DefaultButton';
-import NotificationModal from '../modal/NotificationModal';
+import NotificationModal from './NotificationModal';
 import UploadButton from '../button/UploadButton';
 import UploadFileCard from '../card/UploadFileCard';
 import MainSnackbar from '@/components/snackbar/MainSnackbar';
-// import { updateCurrentUser } from '@/services/authService';
-// import * as ImagePicker from 'expo-image-picker';
+import { updateCurrentUser } from '@/services/AuthService';
+import { useAuth } from '@/context/AuthContext';
 
-const { width } = Dimensions.get('window');
+export default function UploadPhotoModal({ open, onClose, label, description }) {
+  const { colors, spacing, typography, fonts, radius, isDark } = useTheme();
+  const { setUser } = useAuth();
 
-export function UploadPhotoModal({ open, onClose, label = 'PHOTO', description }) {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [snack, setSnack] = useState(null);
+  const fileInputRef = useRef(null);
 
   const labelDesc = `UPLOAD ${label}`;
 
-  const handleSelectPhoto = () => {
-    // In real app, use expo-image-picker
-    // const result = await ImagePicker.launchImageLibraryAsync({...});
-    setUploadedFile({ name: 'sample-photo.jpg', size: 245678 });
+  const handleClickUploadArea = () => {
+    fileInputRef.current?.click();
   };
+
+  const handleFileChange = (e) => {
+    const file = e.target?.files?.[0] || e;
+    if (file) setUploadedFile(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    if (file) setUploadedFile(file);
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
 
   const handleSave = async () => {
     if (!uploadedFile) {
@@ -39,22 +45,21 @@ export function UploadPhotoModal({ open, onClose, label = 'PHOTO', description }
       return;
     }
 
-    // ✅ Simulated success
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setShowNotificationModal(true);
-      setUploadedFile(null);
-    }, 1500);
-
-    /* 🔒 API CALL - COMMENTED OUT
     const formData = new FormData();
     const key = label?.toLowerCase().includes('cover') ? 'cover_photo' : 'profile_photo';
     formData.append(key, uploadedFile);
 
     try {
       setLoading(true);
-      await updateCurrentUser(formData);
+      const res = await updateCurrentUser(formData);
+      console.log('✅ Photo upload success:', res);
+
+      // Update context with new user data
+      setUser((prev) => ({
+        ...prev,
+        user_profile: res.user_profile,
+      }));
+
       setShowNotificationModal(true);
       setUploadedFile(null);
     } catch (err) {
@@ -63,110 +68,164 @@ export function UploadPhotoModal({ open, onClose, label = 'PHOTO', description }
     } finally {
       setLoading(false);
     }
-    */
   };
 
   const handleNotifClose = () => {
     setShowNotificationModal(false);
     onClose();
-    // In real app: setTimeout(() => { window.location.reload(); }, 500);
   };
 
-  useEffect(() => {
-    if (snack) {
-      const timer = setTimeout(() => setSnack(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [snack]);
+  const styles = StyleSheet.create({
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContainer: {
+      backgroundColor: isDark ? '#000000' : '#FFFFFF',
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: '#DADADA',
+      maxWidth: 500,
+      width: '90%',
+      maxHeight: '90%',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.2,
+      shadowRadius: 24,
+      elevation: 8,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    headerContainer: {
+      width: '100%',
+    },
+    bodyContainer: {
+      paddingHorizontal: 20,
+      paddingVertical: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 20,
+    },
+    uploadButtonContainer: {
+      width: '100%',
+    },
+    fileCardContainer: {
+      width: '100%',
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      width: '100%',
+      justifyContent: 'center',
+      gap: 15,
+      paddingHorizontal: 20,
+    },
+    buttonWrapper: {
+      flex: 1,
+    },
+  });
 
   return (
     <>
-      <Modal visible={open} animationType="slide" transparent={true} onRequestClose={onClose}>
+      <Modal
+        visible={open}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={onClose}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>{labelDesc}</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
+            {/* Header */}
+            <View style={styles.headerContainer}>
+              <SecondaryModalHeader onClose={onClose} label={labelDesc} />
             </View>
 
+            {/* Body */}
             <ScrollView 
-              style={styles.content}
-              contentContainerStyle={styles.contentContainer}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
             >
-              {/* Upload Area */}
-              <TouchableOpacity style={styles.uploadArea} onPress={handleSelectPhoto}>
-                <Text style={styles.uploadIcon}>📷</Text>
-                <Text style={styles.uploadText}>Click to upload or drag and drop</Text>
-                <Text style={styles.uploadHelper}>PNG, JPG or JPEG (max. 5MB)</Text>
-              </TouchableOpacity>
-
-              {/* Uploaded File Card */}
-              {uploadedFile && (
-                <View style={styles.fileCard}>
-                  <View style={styles.fileInfo}>
-                    <Text style={styles.fileName}>{uploadedFile.name}</Text>
-                    <Text style={styles.fileSize}>
-                      {(uploadedFile.size / 1024).toFixed(2)} KB
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => setUploadedFile(null)}>
-                    <Text style={styles.fileRemove}>✕</Text>
-                  </TouchableOpacity>
+              <View style={styles.bodyContainer}>
+                {/* Upload Button */}
+                <View style={styles.uploadButtonContainer}>
+                  <UploadButton
+                    label="Click to upload or drag and drop."
+                    onClick={handleClickUploadArea}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    isPhoto={true}
+                    withHelperText={true}
+                    styles={{
+                      backgroundColor: isDark ? '#1C1C1C' : '#F3F3F3',
+                      paddingVertical: 30,
+                      paddingHorizontal: 10,
+                      width: '100%',
+                    }}
+                  />
                 </View>
-              )}
 
-              {/* Buttons */}
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={[styles.button, styles.saveButton, loading && styles.buttonDisabled]}
-                  onPress={handleSave}
-                  disabled={loading}
-                >
-                  <Text style={styles.buttonText}>{loading ? 'SAVING...' : 'SAVE CHANGES'}</Text>
-                </TouchableOpacity>
+                {/* File Card */}
+                {uploadedFile && (
+                  <View style={styles.fileCardContainer}>
+                    <UploadFileCard 
+                      file={uploadedFile} 
+                      onClose={() => setUploadedFile(null)} 
+                    />
+                  </View>
+                )}
 
-                <TouchableOpacity
-                  style={[styles.button, styles.cancelButton]}
-                  onPress={onClose}
-                  disabled={loading}
-                >
-                  <Text style={styles.buttonText}>CANCEL</Text>
-                </TouchableOpacity>
+                {/* Buttons */}
+                <View style={styles.buttonRow}>
+                  <View style={styles.buttonWrapper}>
+                    <DefaultButton
+                      label={loading ? 'SAVING...' : 'SAVE CHANGES'}
+                      onPress={handleSave}
+                      disabled={loading}
+                      fontSize={13}
+                      paddingVertical={7}
+                      paddingHorizontal={10}
+                      fullWidth={true}
+                    />
+                  </View>
+                  <View style={styles.buttonWrapper}>
+                    <DefaultButton
+                      label="CANCEL"
+                      onPress={onClose}
+                      isRed={true}
+                      disabled={loading}
+                      fontSize={13}
+                      paddingVertical={7}
+                      paddingHorizontal={10}
+                      fullWidth={true}
+                    />
+                  </View>
+                </View>
               </View>
             </ScrollView>
           </View>
         </View>
       </Modal>
 
-      {/* Success Modal */}
-      {showNotificationModal && (
-        <Modal visible={showNotificationModal} animationType="fade" transparent={true}>
-          <View style={styles.notificationOverlay}>
-            <View style={styles.notificationContainer}>
-              <Text style={styles.notificationTitle}>
-                {`${label?.toUpperCase() || 'PHOTO'} CHANGE SUCCESSFUL`}
-              </Text>
-              <Text style={styles.notificationDescription}>
-                {description || 'Your photo has been successfully changed.'}
-              </Text>
-              <TouchableOpacity style={styles.notificationButton} onPress={handleNotifClose}>
-                <Text style={styles.buttonText}>OK</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      )}
+      <NotificationModal
+        open={showNotificationModal}
+        onClose={handleNotifClose}
+        label={`${label?.toUpperCase() || 'PHOTO'} CHANGE SUCCESSFUL`}
+        description={description || 'Your photo has been successfully changed.'}
+      />
 
-      {/* Snackbar */}
       {snack && (
-        <View style={[styles.snackbar, snack.severity === 'error' && styles.snackbarError]}>
-          <Text style={styles.snackbarText}>{snack.message}</Text>
-          <TouchableOpacity onPress={() => setSnack(null)}>
-            <Text style={styles.snackbarClose}>✕</Text>
-          </TouchableOpacity>
-        </View>
+        <MainSnackbar
+          open={true}
+          message={snack.message}
+          severity={snack.severity}
+          onClose={() => setSnack(null)}
+          duration={4000}
+        />
       )}
     </>
   );

@@ -4,11 +4,11 @@ import { usePathname } from 'expo-router';
 import DarkModeToggle from '@/components/darkMode/DarkModeToggle';
 import MainDrawer from '@/components/navigation/MainDrawer';
 import NotificationsButton from '@/components/button/NotificationsButton';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function MainHeader() {
   const pathname = usePathname();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const {colors, isDark, fonts} = useTheme();
 
   const navItems = [
     { label: 'Dashboard', href: '/dashboard' },
@@ -33,14 +33,15 @@ export default function MainHeader() {
   };
 
   return (
-    <View style={[styles.container, { borderBottomColor: '#C0BFBF' }]}>
+    <View style={[styles.container, { borderBottomColor: colors.border }]}>
       <View style={styles.leftSection}>
         <MainDrawer />
         <Text 
           style={[
             styles.title,
             { 
-              color: isDark ? '#e5e7eb' : '#313638',
+              color: isDark ? colors.text : '#313638',
+              fontFamily: fonts.barabara,
               fontSize: getFontSize()
             }
           ]}

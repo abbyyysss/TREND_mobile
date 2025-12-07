@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { useTheme } from '@/assets/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function StatsCard({
@@ -23,8 +24,7 @@ export default function StatsCard({
   isDefault = false,
   helperText = "",
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, fonts, isDark } = useTheme();
 
   // Choose the correct icon based on conditions
   const getIconName = () => {
@@ -45,10 +45,10 @@ export default function StatsCard({
     if (isLightGreen) return { backgroundColor: '#52C62D', color: '#FFFFFF' };
     if (isDefault) return { backgroundColor: '#EBC855', color: '#FFFFFF' };
     return {
-      backgroundColor: isDark ? '#000000' : '#FFFFFF',
-      color: isDark ? '#E5E7EB' : '#313638',
+      backgroundColor: isDark ? colors.surface : '#FFFFFF',
+      color: isDark ? colors.text : '#000000',
       borderWidth: 1,
-      borderColor: '#9CA3AF',
+      borderColor: colors.border,
     };
   };
 
@@ -57,12 +57,12 @@ export default function StatsCard({
 
   return (
     <View style={[styles.container, containerColors]}>
-      <Text style={[styles.title, { fontSize: titleTextSize, color: containerColors.color }]}>
+      <Text style={[styles.title, { fontSize: titleTextSize, color: containerColors.color, fontFamily: fonts.gotham }]}>
         {titleText}
       </Text>
       
       {withDescription && (
-        <Text style={[styles.description, { fontSize: titleTextSize, color: containerColors.color }]}>
+        <Text style={[styles.description, { fontSize: titleTextSize, color: containerColors.color, fontFamily: fonts.gotham }]}>
           {descriptionText}
         </Text>
       )}
@@ -71,7 +71,7 @@ export default function StatsCard({
         <Text 
           style={[
             styles.stats, 
-            { fontSize: statsTextSize, color: containerColors.color }
+            { fontSize: statsTextSize, color: containerColors.color, fontFamily: fonts.gotham}
           ]}
           numberOfLines={1}
         >
@@ -92,6 +92,7 @@ export default function StatsCard({
               <Text style={[
                 styles.percentageText,
                 { fontSize: percentageTextSize },
+                {fontFamily: fonts.gotham},
                 { color: isIncreasing ? '#52C62D' : '#EB3223' }
               ]}>
                 {percentageText}
@@ -102,7 +103,7 @@ export default function StatsCard({
       </View>
       
       {helperText !== "" && (
-        <Text style={[styles.helperText, { color: containerColors.color }]}>
+        <Text style={[styles.helperText, { color: containerColors.color, fontFamily: fonts.gotham }]}>
           {helperText}
         </Text>
       )}

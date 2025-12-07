@@ -3,17 +3,8 @@ import api from "./Api";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "./Constants";
 
 // ================== REGISTRATION ==================
-export const registerDOT = (payload) =>
-  api.post("/accounts/register/dot/", payload).then((res) => res.data);
-
 export const registerAE = (payload) =>
   api.post("/accounts/register/accommodation/", payload).then((res) => res.data);
-
-export const registerProvince = (payload) =>
-  api.post("/accounts/register/province/", payload).then((res) => res.data);
-
-export const registerCityMunicipality = (payload) =>
-  api.post("/accounts/register/city-municipality/", payload).then((res) => res.data);
 
 // ================== REGISTRATION REVISION ==================
 export const reviseAERegistration = (payload) =>
@@ -37,10 +28,9 @@ export const loginUser = async (email, password) => {
       hasRefresh: !!res.data.refresh,
       accessTokenLength: res.data.access?.length,
     });
-
+    
     await AsyncStorage.setItem(ACCESS_TOKEN, res.data.access);
     await AsyncStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-
     return { ok: true, data: res.data };
   } catch (error) {
     console.error('❌ Login failed!');
@@ -48,7 +38,6 @@ export const loginUser = async (email, password) => {
     console.error('Error data:', error.response?.data);
     console.error('Full error:', error.message);
     
-    // Return detailed error information
     return {
       ok: false,
       data: error.response?.data || { 
@@ -64,7 +53,8 @@ export const getCurrentUser = async () => {
   try {
     const res = await api.get("/accounts/get-user/");
     console.log('✅ User data retrieved successfully');
-    return res.data;
+    console.log('📦 Raw user data:', res.data);
+    return res.data; // Just return raw data - let AuthContext handle extraction
   } catch (error) {
     console.error('❌ Failed to get user data:', error.response?.data || error.message);
     throw error;

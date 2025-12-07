@@ -21,6 +21,7 @@ import NotificationModal from '@/components/modal/NotificationModal';
 import MonthlyReportModal from '@/components/modal/MonthlyReportModal';
 import FilterSelectInput from '@/components/input/FilterSelectInput';
 import { formatReadableNumber } from '@/utils/numberFormatter';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function ReportsManagement() {
   // const { myProfileId, user, loading: authLoading } = useAuth();

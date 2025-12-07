@@ -1,11 +1,11 @@
 // ProfileNav.js
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter, usePathname, useLocalSearchParams } from 'expo-router';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function ProfileNav({ myId, role }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, isDark, typography, spacing, radius } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const { id: routeId } = useLocalSearchParams();
@@ -37,15 +37,18 @@ export default function ProfileNav({ myId, role }) {
             onPress={() => handlePress(item.href)}
             style={[
               styles.navItem,
-              isActive && styles.navItemActive,
+              { paddingHorizontal: spacing.md },
             ]}
             activeOpacity={0.7}
           >
             <Text
               style={[
                 styles.navText,
-                isDark && styles.navTextDark,
-                isActive && styles.navTextActive,
+                {
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.weight.medium,
+                  color: isActive ? '#D4AF37' : colors.text,
+                },
               ]}
             >
               {item.label}
@@ -53,7 +56,10 @@ export default function ProfileNav({ myId, role }) {
             <View
               style={[
                 styles.navBorder,
-                isActive && styles.navBorderActive,
+                {
+                  backgroundColor: isActive ? '#D4AF37' : 'transparent',
+                  borderRadius: radius.sm,
+                },
               ]}
             />
           </TouchableOpacity>
@@ -70,28 +76,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   navItem: {
-    paddingHorizontal: 15,
     paddingTop: 10,
     paddingBottom: 15,
     marginTop: 5,
   },
   navText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#313638',
-  },
-  navTextDark: {
-    color: '#D5D6D7',
-  },
-  navTextActive: {
-    color: '#D4AF37',
+    // Dynamic styles applied inline
   },
   navBorder: {
     height: 3,
-    backgroundColor: 'transparent',
     marginTop: 5,
-  },
-  navBorderActive: {
-    backgroundColor: '#D4AF37',
   },
 });

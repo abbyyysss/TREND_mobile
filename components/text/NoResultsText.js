@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { useTheme } from '@/assets/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function NoResultsText({ text = "No results found.", isGap = true }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const {fonts, colors, isDark} = useTheme();
 
   return (
     <View style={[
@@ -14,11 +14,11 @@ export default function NoResultsText({ text = "No results found.", isGap = true
       <Ionicons 
         name="file-tray-outline" 
         size={48} 
-        color={isDark ? '#D5D6D7' : '#313638'} 
+        color={isDark ? colors.textSecondary : '#A0A0A0'} 
       />
       <Text style={[
         styles.text,
-        { color: isDark ? '#D5D6D7' : '#313638' }
+        { color: isDark ? colors.textSecondary : '#606060', fontFamily: fonts.gotham }
       ]}>
         {text}
       </Text>

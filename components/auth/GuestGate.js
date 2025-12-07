@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, usePathname } from 'expo-router';
-import AuthGateScreen from '@/components/AuthGateScreen';
+import { useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import LoadingOverlay from '@/components/loading/LoadingOverlay';
 
 /**
  * GuestGate
@@ -18,6 +19,7 @@ export default function GuestGate({
   children,
   redirectPath = '/dashboard', // where to go if already logged in
   debounceMs = 300,             // small delay to avoid flicker
+  overlayStyle = {},
 }) {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
@@ -29,7 +31,7 @@ export default function GuestGate({
 
     if (!loading) {
       const isRevisionAllowed =
-        pathname?.startsWith('/register/revision/ae'); // matches /register/revision/ae and any child path
+        pathname.startsWith('/register/revision/ae'); // matches /register/revision/ae and any child path
 
       if (isRevisionAllowed && !isAuthenticated) {
         // ❌ Not allowed if no user
@@ -52,8 +54,22 @@ export default function GuestGate({
   }, [loading, isAuthenticated, redirectPath, pathname, router, debounceMs]);
 
   if (blocking) {
-    return <AuthGateScreen message="Checking session..." />;
+    return (
+      <View style={[styles.container, overlayStyle]}>
+        <LoadingOverlay message="Checking session..." />
+      </View>
+    );
   }
 
   return children;
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
+});

@@ -1,145 +1,150 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   Modal,
-  ScrollView,
   StyleSheet,
-  useColorScheme,
-  useWindowDimensions,
+  Pressable,
 } from 'react-native';
 import SecondaryModalHeader from '@/components/header/SecondaryModalHeader';
 import DefaultButton from '../button/DefaultButton';
+import NotificationModal from './NotificationModal';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
-export default function ConfirmationModal({ 
-  open, 
-  onClose, 
-  label, 
-  description, 
-  onConfirm, 
-  confirmButtonLabel = "Confirm", 
-  cancelButtonLabel = "Cancel" 
+export default function ConfirmationModal({
+  open,
+  onClose,
+  label,
+  description,
+  onConfirm,
+  confirmButtonLabel = 'Confirm',
+  cancelButtonLabel = 'Cancel',
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const { width } = useWindowDimensions();
+  const [openNotificationModal, setOpenNotificationModal] = useState(false);
+  const { colors, spacing, typography, radius, isDark } = useTheme();
 
-  const backgroundColor = isDark ? '#000000' : '#FFFFFF';
-  const textColor = isDark ? '#d1d5db' : '#111827';
-  const borderColor = '#DADADA';
-  
-  const isMdUp = width >= 768;
-  const fontSize = isMdUp ? 17 : 15;
-  const gap = isMdUp ? 30 : 20;
-  const buttonGap = isMdUp ? 20 : 10;
-  const horizontalPadding = isMdUp ? 20 : 5;
-
-  const handleConfirm = () => {
-    onConfirm();
-    onClose();
+  const handleSaveChanges = () => {
+    // Optionally do validation here
+    setOpenNotificationModal(true); // Open the notification modal
   };
 
   return (
-    <Modal
-      visible={open}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <View style={styles.overlay}>
-        <View style={[
-          styles.modalContainer,
-          { 
-            backgroundColor,
-            borderColor,
-          }
-        ]}>
-          {/* Header */}
-          <SecondaryModalHeader onClose={onClose} label={label} />
-
-          {/* Scrollable Content */}
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={[
-              styles.contentContainer,
-              { 
-                gap,
-                paddingHorizontal: horizontalPadding,
-              }
+    <>
+      <Modal
+        visible={open}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={onClose}
+      >
+        <Pressable style={styles.modalOverlay} onPress={onClose}>
+          <Pressable
+            style={[
+              styles.modalContent,
+              {
+                backgroundColor: isDark ? '#000' : '#fff',
+                borderColor: '#DADADA',
+                borderRadius: radius.xl,
+              },
             ]}
+            onPress={(e) => e.stopPropagation()}
           >
-            <Text style={[styles.description, { color: textColor, fontSize }]}>
-              {description}
-            </Text>
-
-            {/* Buttons */}
-            <View style={[styles.buttonContainer, { gap: buttonGap }]}>
-              <View style={styles.buttonWrapper}>
-                <DefaultButton
-                  label={confirmButtonLabel}
-                  onPress={handleConfirm}
-                  fontSize={fontSize}
-                />
+            <View style={styles.modalInner}>
+              {/* Header */}
+              <View style={styles.stickyHeader}>
+                <SecondaryModalHeader onClose={onClose} label={label} />
               </View>
-              <View style={styles.buttonWrapper}>
-                <DefaultButton
-                  label={cancelButtonLabel}
-                  onPress={onClose}
-                  isRed
-                  fontSize={fontSize}
-                />
+
+              {/* Content */}
+              <View
+                style={[
+                  styles.contentContainer,
+                  {
+                    gap: spacing.lg,
+                    paddingHorizontal: spacing.sm,
+                    paddingVertical: spacing.xl,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.descriptionText,
+                    {
+                      color: isDark ? '#d1d5db' : '#111827',
+                      fontSize: typography.fontSize.sm,
+                    },
+                  ]}
+                >
+                  {description}
+                </Text>
+                <View style={[styles.buttonRow, { gap: spacing.sm, paddingHorizontal: spacing.md }]}>
+                  <View style={styles.buttonWrapper}>
+                    <DefaultButton
+                      classProps="text-[13px] md:text-[15px] py-[5px]"
+                      label={confirmButtonLabel}
+                      onClick={() => {
+                        onConfirm(); // <- parent decides what happens here
+                        onClose();
+                      }}
+                    />
+                  </View>
+                  <View style={styles.buttonWrapper}>
+                    <DefaultButton
+                      classProps="text-[13px] md:text-[15px] py-[5px]"
+                      label={cancelButtonLabel}
+                      onClick={onClose}
+                      isRed={true}
+                    />
+                  </View>
+                </View>
               </View>
             </View>
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
   },
-  modalContainer: {
-    width: '100%',
-    maxWidth: 600,
-    borderRadius: 20,
+  modalContent: {
+    width: '90%',
+    maxWidth: 500,
     borderWidth: 1,
-    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 24,
-    elevation: 12,
+    elevation: 8,
   },
-  scrollView: {
-    maxHeight: '80%',
+  modalInner: {
+    width: '100%',
+  },
+  stickyHeader: {
+    width: '100%',
   },
   contentContainer: {
-    paddingVertical: 40,
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
-  description: {
+  descriptionText: {
     textAlign: 'center',
-    lineHeight: 22,
+    paddingHorizontal: 10,
   },
-  buttonContainer: {
+  buttonRow: {
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'center',
-    paddingHorizontal: 10,
   },
   buttonWrapper: {
     flex: 1,
-    maxWidth: 200,
+    maxWidth: 150,
   },
 });

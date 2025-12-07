@@ -121,18 +121,20 @@ export default function MainDrawer() {
                     ]}
                     activeOpacity={0.7}
                   >
-                    <NavIcon
+                    <Image
                       source={item.icon}
-                      alt={item.label}
-                      size={30}
-                      style={styles.navIconSpacing}
+                      style={[
+                        styles.navIcon,
+                        { tintColor: isActive ? '#000000' : colors.text,  }
+                      ]}
+                      resizeMode="contain"
                     />
                     <Text
                       style={[
                         styles.navText,
                         { 
-                          color: colors.text,
-                          fontFamily: fonts.body 
+                          color: isActive ? '#000000' : colors.text,
+                          fontFamily: fonts.gotham
                         },
                         isActive && styles.navTextActive,
                       ]}
@@ -202,16 +204,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   navItemActive: {
-    backgroundColor: '#D4AF37', // Gold/yellow color like in your screenshot
+    backgroundColor: '#D4AF37', // Gold/yellow color
   },
-  navIconSpacing: {
+  navIcon: {
+    width: 30,
+    height: 30,
     marginRight: 12,
   },
   navText: {
     fontSize: 14,
-  },
-  navTextActive: {
-    fontWeight: 'bold',
-    color: '#000000', // Dark text on gold background
   },
 });

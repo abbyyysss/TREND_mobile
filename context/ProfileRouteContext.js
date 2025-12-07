@@ -1,4 +1,3 @@
-'use client';
 import { createContext, useContext } from 'react';
 
 const ProfileRouteContext = createContext({ viewed: null, isMine: false, loading: true });

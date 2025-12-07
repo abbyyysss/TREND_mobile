@@ -122,6 +122,14 @@ export default function MainSelectInput({
     outputRange: [15, 12],
   });
 
+  // Determine placeholder visibility
+  const getPlaceholder = () => {
+    if (isOutlined && !isOpen) {
+      return ''; // Hide placeholder for outlined variant when closed
+    }
+    return placeholder;
+  };
+
   return (
     <View style={styles.container}>
       {/* Main Input Wrapper */}
@@ -176,7 +184,7 @@ export default function MainSelectInput({
               ]}
               value={searchText}
               onChangeText={handleSearchChange}
-              placeholder={placeholder}
+              placeholder={getPlaceholder()}
               placeholderTextColor={colors.placeholder}
               autoFocus
             />
@@ -208,7 +216,7 @@ export default function MainSelectInput({
               ]}
               numberOfLines={1}
             >
-              {hasValue ? selected.label : placeholder}
+              {hasValue ? selected.label : (isOutlined ? '' : placeholder)}
             </Text>
             <Ionicons
               name="caret-down"

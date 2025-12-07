@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,45 +6,86 @@ import {
   TouchableOpacity,
   Modal,
   Image,
-  useColorScheme,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/assets/theme/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { buildMediaUrl } from '@/utils/imageHelpers';
+import { formatAEType } from '@/utils/aeTypes';
 
 export default function ProfileButton() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [buttonLayout, setButtonLayout] = useState(null);
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const pathname = usePathname();
   const router = useRouter();
+  
+  // Theme context
+  const { colors, isDark, fonts } = useTheme();
+  
+  // Auth context
+  const { user, logout, loading } = useAuth();
 
-  // Mock user data for UI purposes
-  const username = 'John Doe';
-  const role = 'User';
-  const profilePhoto = require('@/assets/images/Profile/default-profile-photo.png');
+  // Show loading state
+  if (loading) {
+    return (
+      <View style={styles.profileContainer}>
+        <ActivityIndicator size="small" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading...
+        </Text>
+      </View>
+    );
+  }
+
+  // No user logged in
+  if (!user) {
+    return null;
+  }
+
+  // Extract user data
+  const u = user?.user_profile;
+  
+  // Format establishment type
+  const establishmentType = u?.type_display || formatAEType(u?.type) || 'AE';
+
+  // Determine username - use establishment name or business name
+  const username = u?.establishment_name || u?.business_name || user?.username || 'User';
+
+  // Profile photo
+  const profilePhoto = buildMediaUrl(u?.user?.profile_photo)
+    ? { uri: buildMediaUrl(u?.user?.profile_photo) }
+    : require('@/assets/images/Profile/default-profile-photo.png');
 
   const handleMenuClose = (action) => {
     setMenuOpen(false);
-    
+
     if (action === 'logout') {
+      logout();
       router.push('/login');
       return;
     }
 
     if (action === 'profile') {
-      if (pathname !== '/profile') {
+      const myProfileId = user?.user_profile?.id;
+      if (myProfileId) {
+        // Navigate to profile with ID as query parameter
+        router.push(`/profile/${myProfileId}`);
+      } else {
+        // Fallback if no profile ID
+        console.warn('No profile ID found for user');
         router.push('/profile');
       }
     }
   };
 
-  const textColor = isDark ? '#d5d6d7' : '#313638';
+  const isProfileActive = pathname?.startsWith('/profile');
 
   return (
     <>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.profileContainer}
         onPress={() => setMenuOpen(true)}
         activeOpacity={0.7}
@@ -53,29 +94,22 @@ export default function ProfileButton() {
           setButtonLayout(layout);
         }}
       >
-        <Image
-          source={profilePhoto}
-          style={styles.profileImage}
-        />
+        <Image source={profilePhoto} style={styles.profileImage} />
         <View style={styles.textContainer}>
-          <Text 
-            style={[styles.username, { color: isDark ? '#e5e7eb' : '#313638' }]}
+          <Text
+            style={[styles.username, { color: colors.text, fontFamily: fonts.gotham }]}
             numberOfLines={1}
           >
             {username}
           </Text>
-          <Text 
-            style={[styles.role, { color: isDark ? '#e5e7eb' : '#757575' }]}
+          <Text
+            style={[styles.role, { color: colors.textSecondary, fontFamily: fonts.gotham }]}
             numberOfLines={1}
           >
-            {role}
+            {establishmentType}
           </Text>
         </View>
-        <Ionicons
-          name="chevron-down"
-          size={20}
-          color={isDark ? '#e5e7eb' : '#313638'}
-        />
+        <Ionicons name="chevron-down" size={20} color={colors.text} />
       </TouchableOpacity>
 
       <Modal
@@ -84,40 +118,44 @@ export default function ProfileButton() {
         transparent={true}
         onRequestClose={() => setMenuOpen(false)}
       >
-        <Pressable 
-          style={styles.modalOverlay}
-          onPress={() => setMenuOpen(false)}
-        >
-          <View 
+        <Pressable style={styles.modalOverlay} onPress={() => setMenuOpen(false)}>
+          <View
             style={[
               styles.menuContainer,
-              { 
-                backgroundColor: isDark ? '#000000' : '#ffffff',
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
                 position: 'absolute',
                 top: buttonLayout ? buttonLayout.y + buttonLayout.height : 0,
                 right: 16,
-              }
+              },
             ]}
           >
             <TouchableOpacity
               style={[
                 styles.menuItem,
-                pathname?.startsWith('/profile') && styles.menuItemActive
+                isProfileActive && styles.menuItemActive,
               ]}
               onPress={() => handleMenuClose('profile')}
               activeOpacity={0.7}
             >
-              <Ionicons
-                name="person-outline"
-                size={18}
-                color={textColor}
-                style={styles.menuIcon}
-              />
-              <Text style={[
-                styles.menuText,
-                { color: textColor },
-                pathname?.startsWith('/profile') && styles.menuTextActive
+              <View style={[
+                styles.iconWrapper,
+                { borderColor: isProfileActive ? '#000000' : colors.text }
               ]}>
+                <Ionicons
+                  name="person-outline"
+                  size={14}
+                  color={isProfileActive ? '#000000' : colors.text}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.menuText,
+                  { color: isProfileActive ? '#000000' : colors.text },
+                  isProfileActive && styles.menuTextActive,
+                ]}
+              >
                 Profile
               </Text>
             </TouchableOpacity>
@@ -130,10 +168,10 @@ export default function ProfileButton() {
               <Ionicons
                 name="log-out-outline"
                 size={18}
-                color={textColor}
+                color={colors.text}
                 style={styles.menuIcon}
               />
-              <Text style={[styles.menuText, { color: textColor }]}>
+              <Text style={[styles.menuText, { color: colors.text }]}>
                 Logout
               </Text>
             </TouchableOpacity>
@@ -162,10 +200,16 @@ const styles = StyleSheet.create({
     maxWidth: 100,
   },
   username: {
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: '400',
   },
   role: {
+    fontSize: 12,
+    fontWeight: '400',
+  },
+  loadingText: {
     fontSize: 14,
+    marginLeft: 8,
   },
   modalOverlay: {
     flex: 1,
@@ -177,7 +221,6 @@ const styles = StyleSheet.create({
     minWidth: 170,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#9CA3AF',
     padding: 5,
     shadowColor: '#9CA3AF',
     shadowOffset: { width: 0, height: 4 },
@@ -189,13 +232,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 10,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   menuItemActive: {
     backgroundColor: 'rgba(212, 175, 55, 0.6)',
+  },
+  iconWrapper: {
+    padding: 4,
+    borderRadius: 999,
+    borderWidth: 1,
   },
   menuIcon: {
     width: 20,

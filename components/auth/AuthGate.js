@@ -1,10 +1,10 @@
-import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import useAuthGate from '@/hooks/useAuthGate';
-import AuthGateScreen from '@/components/AuthGateScreen';
+import useAuthGate from '@/hooks/UseAuthGate';
+import { View, StyleSheet } from 'react-native';
+import LoadingOverlay from '@/components/loading/LoadingOverlay';
 
 /**
- * Wrapper you can put in any layout/screen.
+ * Wrapper you can put in any layout/page.
  * It derives the user's role from your user object shape.
  */
 export default function AuthGate({
@@ -13,6 +13,7 @@ export default function AuthGate({
   forbiddenPath = '/dashboard',
   allowRoles = undefined,     // e.g. ['AE']
   debounceMs = 0,
+  overlayStyle = {},
 }) {
   const { user, isAuthenticated, loading } = useAuth();
 
@@ -20,9 +21,6 @@ export default function AuthGate({
   const role =
     user?.role ??
     user?.ae?.user?.role ??
-    user?.dot?.user?.role ??
-    user?.province?.user?.role ??
-    user?.city_municipality?.user?.role ??
     null;
 
   const { gateMessage, blocking } = useAuthGate({
@@ -36,8 +34,22 @@ export default function AuthGate({
   });
 
   if (blocking) {
-    return <AuthGateScreen message={gateMessage} />;
+    return (
+      <View style={[styles.container, overlayStyle]}>
+        <LoadingOverlay message={gateMessage} />
+      </View>
+    );
   }
 
   return children;
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
+});
