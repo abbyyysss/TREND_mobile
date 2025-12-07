@@ -5,8 +5,8 @@ import {
   Modal,
   ScrollView,
   StyleSheet,
-  useColorScheme,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import FullUnderlineTitle from '../text/FullUnderlineTitle';
@@ -18,50 +18,47 @@ import ConfirmationModal from '../modal/ConfirmationModal';
 import NotificationModal from '../modal/NotificationModal';
 import LoadingText from '../loading/LoadingText';
 import LoadingSnackbar from '../snackbar/LoadingSnackbar';
+import MainSnackbar from '../snackbar/MainSnackbar';
+import { useTheme } from '@/assets/theme/ThemeContext';
+import GuestLogService from '@/services/GuestLogService';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function GuestLogModal({ 
   open, 
   onClose, 
   mode = 'add', // 'add', 'edit', 'view'
   rowData = null,
+  refreshLogs,
+  user,
+  role,
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, isDark, fonts, spacing } = useTheme();
 
   const [openConfirmationModal, setOpenConfirmationModal] = useState(false);
   const [openNotificationModal, setOpenNotificationModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
-  // Mock data for dropdowns
-  const roomTypes = [
-    { value: 'single', label: 'Single Room' },
-    { value: 'double', label: 'Double Room' },
-    { value: 'suite', label: 'Suite' },
-    { value: 'deluxe', label: 'Deluxe Room' },
-  ];
-
-  const nationalityOptions = [
-    'United States',
-    'Japan',
-    'South Korea',
-    'China',
-    'Singapore',
-    'Australia',
-    'United Kingdom',
-    'Canada',
-  ];
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [nationalityOptions, setNationalityOptions] = useState([]);
 
   const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
   const formattedDate = today.toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 
   });
 
-  const [checkInDate, setCheckInDate] = useState(formattedDate);
-  const [roomId, setRoomId] = useState('');
-  const [roomType, setRoomType] = useState('');
-  const [nightsStaying, setNightsStaying] = useState('');
+  const [formData, setFormData] = useState({
+    check_in_date: `${year}-${month}-${day}`,
+    ae_profile: null,
+    room_id: '',
+    room_type: '',
+    number_of_nights: '',
+  });
 
   const [selectedNationality, setSelectedNationality] = useState('');
   const [nationalities, setNationalities] = useState([]);
@@ -77,39 +74,104 @@ export default function GuestLogModal({
 
   const [totalGuests, setTotalGuests] = useState(0);
   const [errors, setErrors] = useState({});
+  
+  const [errorSnackbar, setErrorSnackbar] = useState({
+    open: false,
+    message: '',
+  });
 
-  // Load data when modal opens
+  // Load room types and nationalities
   useEffect(() => {
-    if (open && rowData && mode !== 'add') {
-      setCheckInDate(rowData.checkInDate || formattedDate);
-      setRoomId(rowData.room_id || '');
-      setRoomType(rowData.roomType || '');
-      setNightsStaying(rowData.lengthOfStay?.toString() || '');
+    const loadData = async () => {
+      if (open) {
+        setIsLoadingData(true);
+        try {
+          const [roomTypesData, nationalitiesData] = await Promise.all([
+            GuestLogService.getRoomTypes(role),
+            GuestLogService.getNationalities(),
+          ]);
 
-      if (rowData.guestCounts) {
-        setGuestCounts({
-          filipinoMale: String(rowData.guestCounts.filipinoMale || 0),
-          filipinoFemale: String(rowData.guestCounts.filipinoFemale || 0),
-          foreignMale: String(rowData.guestCounts.foreignMale || 0),
-          foreignFemale: String(rowData.guestCounts.foreignFemale || 0),
-          ofwMale: String(rowData.guestCounts.ofwMale || 0),
-          ofwFemale: String(rowData.guestCounts.ofwFemale || 0),
+          setRoomTypes(roomTypesData);
+          setNationalityOptions(nationalitiesData.map((n) => n.country));
+        } catch (error) {
+          console.error('Error loading data:', error);
+          setErrorSnackbar({
+            open: true,
+            message: 'Failed to load form data. Please try again.',
+          });
+        } finally {
+          setIsLoadingData(false);
+        }
+      }
+    };
+
+    loadData();
+  }, [open, role]);
+
+  // Load rowData when modal opens in edit/view mode
+  useEffect(() => {
+    if (open) {
+      if ((mode === 'edit' || mode === 'view') && rowData) {
+        const updatedGuestCounts = {
+          filipinoMale: '0',
+          filipinoFemale: '0',
+          foreignMale: '0',
+          foreignFemale: '0',
+          ofwMale: '0',
+          ofwFemale: '0',
+        };
+
+        const otherNationalities = [];
+
+        (rowData.nationalities || []).forEach((nat) => {
+          const nationalityValue = nat.nationality_name;
+
+          if (nationalityValue === 'Philippines' || nationalityValue === 48) {
+            if (nat.filipino_subcategory === 'Non-OFW') {
+              updatedGuestCounts.filipinoMale = String(Number(nat.male_count) || 0);
+              updatedGuestCounts.filipinoFemale = String(Number(nat.female_count) || 0);
+            } else if (nat.filipino_subcategory === 'OFW') {
+              updatedGuestCounts.ofwMale = String(Number(nat.male_count) || 0);
+              updatedGuestCounts.ofwFemale = String(Number(nat.female_count) || 0);
+            } else if (nat.filipino_subcategory === 'Foreigner') {
+              updatedGuestCounts.foreignMale = String(Number(nat.male_count) || 0);
+              updatedGuestCounts.foreignFemale = String(Number(nat.female_count) || 0);
+            }
+          } else {
+            otherNationalities.push({
+              nationality: nationalityValue,
+              filipino_subcategory: null,
+              male_count: String(Number(nat.male_count) || 0),
+              female_count: String(Number(nat.female_count) || 0),
+            });
+          }
         });
-      }
 
-      if (rowData.nationalities) {
-        setNationalities(rowData.nationalities);
+        setGuestCounts(updatedGuestCounts);
+        setNationalities(otherNationalities);
+
+        setFormData({
+          check_in_date: rowData.check_in_date || `${year}-${month}-${day}`,
+          ae_profile: rowData.ae_profile || null,
+          room_id: rowData.room_id || '',
+          room_type: rowData.room_type || '',
+          number_of_nights: String(rowData.number_of_nights || ''),
+        });
+      } else {
+        // Reset for add mode
+        resetForm();
       }
-    } else if (open && mode === 'add') {
-      resetForm();
     }
   }, [open, mode, rowData]);
 
   const resetForm = () => {
-    setCheckInDate(formattedDate);
-    setRoomId('');
-    setRoomType('');
-    setNightsStaying('');
+    setFormData({
+      check_in_date: `${year}-${month}-${day}`,
+      ae_profile: null,
+      room_id: '',
+      room_type: '',
+      number_of_nights: '',
+    });
     setGuestCounts({
       filipinoMale: '0',
       filipinoFemale: '0',
@@ -141,7 +203,7 @@ export default function GuestLogModal({
   };
 
   const updateNationalityCount = (nationality, gender, value) => {
-    const safeValue = Math.max(0, Number(value) || 0).toString();
+    const safeValue = String(Math.max(0, Number(value) || 0));
     setNationalities((prev) =>
       prev.map((nation) =>
         nation.nationality === nationality
@@ -149,6 +211,18 @@ export default function GuestLogModal({
           : nation
       )
     );
+  };
+
+  const handleGuestCountChange = (field, value) => {
+    const safeValue = String(Math.max(0, Number(value) || 0));
+    setGuestCounts({
+      ...guestCounts,
+      [field]: safeValue,
+    });
+
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: null });
+    }
   };
 
   // Auto-calculate total guests
@@ -168,24 +242,11 @@ export default function GuestLogModal({
     setTotalGuests(total);
   }, [guestCounts, nationalities]);
 
-  const handleGuestCountChange = (field, value) => {
-    const safeValue = Math.max(0, Number(value) || 0).toString();
-    setGuestCounts({
-      ...guestCounts,
-      [field]: safeValue,
-    });
-
-    // Clear error if exists
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: null });
-    }
-  };
-
   const validate = () => {
     const newErrors = {};
-    if (!roomId) newErrors.roomId = 'Room ID is required';
-    if (!roomType) newErrors.roomType = 'Room type is required';
-    if (!nightsStaying) newErrors.nightsStaying = 'Number of nights is required';
+    if (!formData.room_id) newErrors.room_id = 'Room ID is required';
+    if (!formData.room_type) newErrors.room_type = 'Room type is required';
+    if (!formData.number_of_nights) newErrors.number_of_nights = 'Number of nights is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -195,24 +256,83 @@ export default function GuestLogModal({
     setOpenConfirmationModal(true);
   };
 
-  const handleConfirmSave = () => {
+  const handleConfirmSave = async () => {
     setIsSubmitting(true);
-    
-    setTimeout(() => {
-      console.log('Form submitted:', {
-        checkInDate,
-        roomId,
-        roomType,
-        nightsStaying,
-        guestCounts,
-        nationalities,
-        totalGuests,
-      });
+    try {
+      const u = user?.user_profile;
+      const reportMode = role === 'AE' ? u?.report_mode : 'daily';
+
+      // Prepare nationalities data
+      const nationalitiesData = [];
       
+      if (Number(guestCounts.filipinoMale) > 0 || Number(guestCounts.filipinoFemale) > 0) {
+        nationalitiesData.push({
+          nationality: 'Philippines',
+          filipino_subcategory: 'Non-OFW',
+          male_count: Number(guestCounts.filipinoMale) || 0,
+          female_count: Number(guestCounts.filipinoFemale) || 0,
+        });
+      }
+      
+      if (Number(guestCounts.ofwMale) > 0 || Number(guestCounts.ofwFemale) > 0) {
+        nationalitiesData.push({
+          nationality: 'Philippines',
+          filipino_subcategory: 'OFW',
+          male_count: Number(guestCounts.ofwMale) || 0,
+          female_count: Number(guestCounts.ofwFemale) || 0,
+        });
+      }
+      
+      if (Number(guestCounts.foreignMale) > 0 || Number(guestCounts.foreignFemale) > 0) {
+        nationalitiesData.push({
+          nationality: 'Philippines',
+          filipino_subcategory: 'Foreigner',
+          male_count: Number(guestCounts.foreignMale) || 0,
+          female_count: Number(guestCounts.foreignFemale) || 0,
+        });
+      }
+      
+      nationalities.forEach((nat) => {
+        if (Number(nat.male_count) > 0 || Number(nat.female_count) > 0) {
+          nationalitiesData.push({
+            nationality: nat.nationality,
+            filipino_subcategory: null,
+            male_count: Number(nat.male_count),
+            female_count: Number(nat.female_count),
+          });
+        }
+      });
+
+      const submitData = {
+        ...formData,
+        ae_profile: u?.id || null,
+        nationalities: nationalitiesData,
+      };
+
+      if (mode === 'add') {
+        await GuestLogService.submit(submitData, reportMode);
+      } else if (mode === 'edit' && rowData?.id) {
+        await GuestLogService.submit(submitData, reportMode, rowData.id);
+      }
+
+      // Refresh logs
+      if (refreshLogs) {
+        await refreshLogs();
+      }
+
+      setOpenNotificationModal(true);
+    } catch (error) {
+      console.error('Error submitting guest log:', error);
+      const errorMsg =
+        error?.response?.data?.detail ||
+        error?.response?.data?.message ||
+        'Server error occurred. Please try again.';
+
+      setErrorSnackbar({ open: true, message: errorMsg });
+    } finally {
       setIsSubmitting(false);
       setOpenConfirmationModal(false);
-      setOpenNotificationModal(true);
-    }, 2000);
+    }
   };
 
   const handleCancel = () => {
@@ -221,6 +341,8 @@ export default function GuestLogModal({
   };
 
   const isViewMode = mode === 'view';
+
+  if (!user) return null;
 
   return (
     <>
@@ -231,267 +353,286 @@ export default function GuestLogModal({
         onRequestClose={handleCancel}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, isDark && styles.modalContentDark]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             {/* Close Button */}
             <TouchableOpacity style={styles.closeButton} onPress={handleCancel}>
-              <Text style={styles.closeButtonText}>✕</Text>
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Title */}
-              <Text style={[styles.title, isDark && styles.titleDark]}>
-                Guest Log for
-              </Text>
-
-              {/* Check-in Date */}
-              <MainTextInput
-                value={checkInDate}
-                onChangeText={(value) => {
-                  setCheckInDate(value);
-                  if (errors.checkInDate && value.trim() !== '') {
-                    setErrors({ ...errors, checkInDate: null });
-                  }
-                }}
-                variant="outlined"
-                disabled={true}
-              />
-
-              {/* Room ID */}
-              <MainTextInput
-                label="Room ID"
-                value={roomId}
-                onChangeText={(value) => {
-                  setRoomId(value);
-                  if (errors.roomId && value.trim() !== '') {
-                    setErrors({ ...errors, roomId: null });
-                  }
-                }}
-                variant="outlined"
-                disabled={isViewMode}
-                error={errors.roomId}
-              />
-
-              {/* Room Type Dropdown */}
-              <MainSelectInput
-                label="Room Type"
-                value={roomType}
-                onChange={(value) => {
-                  setRoomType(value);
-                  if (errors.roomType && value) {
-                    setErrors({ ...errors, roomType: null });
-                  }
-                }}
-                options={roomTypes}
-                disabled={isViewMode}
-                variant="outlined"
-                error={errors.roomType}
-              />
-
-              {/* How many nights */}
-              <MainTextInput
-                label="How many nights are they staying for?"
-                value={nightsStaying}
-                onChangeText={(value) => {
-                  setNightsStaying(value);
-                  if (errors.nightsStaying && value.trim() !== '') {
-                    setErrors({ ...errors, nightsStaying: null });
-                  }
-                }}
-                keyboardType="numeric"
-                variant="outlined"
-                disabled={isViewMode}
-                error={errors.nightsStaying}
-              />
-
-              {/* Philippine Residents Header */}
-              <FullUnderlineTitle text="Philippine Residents" />
-              <View style={styles.sectionSpacing} />
-
-              {/* Filipino Nationality */}
-              <Text style={[styles.subsectionTitle, isDark && styles.subsectionTitleDark]}>
-                Filipino Nationality
-              </Text>
-              <View style={styles.row}>
-                <View style={{ flex: 1 }}>
-                  <MainTextInput
-                    label="Male"
-                    value={guestCounts.filipinoMale}
-                    onChangeText={(value) => handleGuestCountChange('filipinoMale', value)}
-                    keyboardType="numeric"
-                    variant="outlined"
-                    disabled={isViewMode}
-                    style={styles.noBottomMargin}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <MainTextInput
-                    label="Female"
-                    value={guestCounts.filipinoFemale}
-                    onChangeText={(value) => handleGuestCountChange('filipinoFemale', value)}
-                    keyboardType="numeric"
-                    variant="outlined"
-                    disabled={isViewMode}
-                    style={styles.noBottomMargin}
-                  />
-                </View>
+            {isLoadingData ? (
+              <View style={styles.loadingContainer}>
+                <LoadingText text="Loading..." />
               </View>
-
-              {/* Foreign Nationality */}
-              <View style={styles.foreignNationalityHeader}>
-                <Text style={[styles.subsectionTitle, isDark && styles.subsectionTitleDark]}>
-                  Foreign Nationality
+            ) : (
+              <ScrollView 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: spacing.lg }}
+              >
+                {/* Title */}
+                <Text style={[styles.title, { color: colors.text, fontFamily: fonts.gotham }]}>
+                  Guest Log for
                 </Text>
-                <InformationButton
-                  helperText="A foreign national who has been granted legal permission to reside permanently or indefinitely in the Philippines."
-                  iconSize={20}
-                />
-              </View>
-              <View style={styles.row}>
-                <View style={{ flex: 1 }}>
-                  <MainTextInput
-                    label="Male"
-                    value={guestCounts.foreignMale}
-                    onChangeText={(value) => handleGuestCountChange('foreignMale', value)}
-                    keyboardType="numeric"
-                    variant="outlined"
-                    disabled={isViewMode}
-                    style={styles.noBottomMargin}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <MainTextInput
-                    label="Female"
-                    value={guestCounts.foreignFemale}
-                    onChangeText={(value) => handleGuestCountChange('foreignFemale', value)}
-                    keyboardType="numeric"
-                    variant="outlined"
-                    disabled={isViewMode}
-                    style={styles.noBottomMargin}
-                  />
-                </View>
-              </View>
 
-              {/* OFWs Section */}
-              <FullUnderlineTitle text="Overseas Filipino Workers" />
-              <View style={styles.sectionSpacing} />
-              
-              <Text style={[styles.subsectionTitle, isDark && styles.subsectionTitleDark]}>
-                Overseas Filipino Workers
-              </Text>
-              <View style={styles.row}>
-                <View style={{ flex: 1 }}>
-                  <MainTextInput
-                    label="Male"
-                    value={guestCounts.ofwMale}
-                    onChangeText={(value) => handleGuestCountChange('ofwMale', value)}
-                    keyboardType="numeric"
-                    variant="outlined"
-                    disabled={isViewMode}
-                    style={styles.noBottomMargin}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <MainTextInput
-                    label="Female"
-                    value={guestCounts.ofwFemale}
-                    onChangeText={(value) => handleGuestCountChange('ofwFemale', value)}
-                    keyboardType="numeric"
-                    variant="outlined"
-                    disabled={isViewMode}
-                    style={styles.noBottomMargin}
-                  />
-                </View>
-              </View>
-
-              {/* Non-Philippine Residents */}
-              <FullUnderlineTitle text="Non-Philippine Residents" />
-              <View style={styles.sectionSpacing} />
-
-              {nationalities.map((nation) => (
-                <View key={nation.nationality}>
-                  <View style={styles.foreignNationalityHeader}>
-                    <Text style={[styles.subsectionTitle, isDark && styles.subsectionTitleDark]}>
-                      {nation.nationality}
-                    </Text>
-                    {!isViewMode && (
-                      <TouchableOpacity onPress={() => handleRemoveNationality(nation.nationality)}>
-                        <Ionicons name="trash" size={20} color="#EF1A25" />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                  <View style={styles.row}>
-                    <View style={{ flex: 1 }}>
-                      <MainTextInput
-                        label="Male"
-                        value={nation.male_count}
-                        onChangeText={(value) => updateNationalityCount(nation.nationality, 'male', value)}
-                        keyboardType="numeric"
-                        variant="outlined"
-                        disabled={isViewMode}
-                        style={styles.noBottomMargin}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <MainTextInput
-                        label="Female"
-                        value={nation.female_count}
-                        onChangeText={(value) => updateNationalityCount(nation.nationality, 'female', value)}
-                        keyboardType="numeric"
-                        variant="outlined"
-                        disabled={isViewMode}
-                        style={styles.noBottomMargin}
-                      />
-                    </View>
-                  </View>
-                </View>
-              ))}
-
-              {!isViewMode && (
-                <MainSelectInput
-                  label="+ Add Nationality"
-                  value={selectedNationality}
-                  onChange={(value) => {
-                    handleAddNationality(value);
-                    setSelectedNationality('');
+                {/* Check-in Date */}
+                <MainTextInput
+                  value={formatDate(formData.check_in_date)}
+                  onChangeText={(value) => {
+                    setFormData({ ...formData, check_in_date: value });
+                    if (errors.check_in_date && value.trim() !== '') {
+                      setErrors({ ...errors, check_in_date: null });
+                    }
                   }}
-                  options={nationalityOptions
-                    .filter((opt) => !nationalities.find((n) => n.nationality === opt))
-                    .map((opt) => ({ value: opt, label: opt }))}
                   variant="outlined"
-                  placeholder="Select nationality"
+                  disabled={true}
+                  shrink={true}
                 />
-              )}
 
-              {/* Total Guests */}
-              <MainTextInput
-                label="Total Guests"
-                value={String(totalGuests)}
-                variant="outlined"
-                disabled={true}
-              />
+                {/* Room ID */}
+                <MainTextInput
+                  label="Room ID"
+                  value={formData.room_id}
+                  onChangeText={(value) => {
+                    setFormData({ ...formData, room_id: value });
+                    if (errors.room_id && value.trim() !== '') {
+                      setErrors({ ...errors, room_id: null });
+                    }
+                  }}
+                  variant="outlined"
+                  disabled={isViewMode}
+                  error={!!errors.room_id}
+                  helperText={errors.room_id}
+                  shrink={true}
+                />
 
-              {/* Action Buttons */}
-              <View style={styles.buttonContainer}>
-                {!isViewMode && (
-                  <View style={styles.buttonWrapper}>
-                    <DefaultButton
-                      label={isSubmitting ? <LoadingText text="Submitting..." /> : "Submit"}
-                      onPress={handleSave}
-                      disabled={isSubmitting}
-                      style={styles.saveButton}
+                {/* Room Type Dropdown */}
+                <MainSelectInput
+                  label="Room Type"
+                  value={formData.room_type}
+                  onChange={(value) => {
+                    setFormData({ ...formData, room_type: value });
+                    if (errors.room_type && value) {
+                      setErrors({ ...errors, room_type: null });
+                    }
+                  }}
+                  options={roomTypes.map((room) => ({
+                    value: room.id,
+                    label: room.room_name,
+                  }))}
+                  disabled={isViewMode}
+                  variant="outlined"
+                  error={!!errors.room_type}
+                  helperText={errors.room_type}
+                  placeholder="Select room type"
+                />
+
+                {/* How many nights */}
+                <MainTextInput
+                  label="How many nights are they staying for?"
+                  value={formData.number_of_nights}
+                  onChangeText={(value) => {
+                    setFormData({ ...formData, number_of_nights: value });
+                    if (errors.number_of_nights && value.trim() !== '') {
+                      setErrors({ ...errors, number_of_nights: null });
+                    }
+                  }}
+                  keyboardType="numeric"
+                  variant="outlined"
+                  disabled={isViewMode}
+                  error={!!errors.number_of_nights}
+                  helperText={errors.number_of_nights}
+                  shrink={true}
+                />
+
+                {/* Philippine Residents Header */}
+                <FullUnderlineTitle text="Philippine Residents" />
+                <View style={styles.sectionSpacing} />
+
+                {/* Filipino Nationality */}
+                <Text style={[styles.subsectionTitle, { color: colors.text, fontFamily: fonts.gotham }]}>
+                  Filipino Nationality
+                </Text>
+                <View style={styles.row}>
+                  <View style={{ flex: 1 }}>
+                    <MainTextInput
+                      label="Male"
+                      value={guestCounts.filipinoMale}
+                      onChangeText={(value) => handleGuestCountChange('filipinoMale', value)}
+                      keyboardType="numeric"
+                      variant="outlined"
+                      disabled={isViewMode}
+                      shrink={true}
                     />
                   </View>
-                )}
-                <View style={styles.buttonWrapper}>
-                  <DefaultButton
-                    label={isViewMode ? 'Close' : 'Cancel'}
-                    onPress={handleCancel}
-                    style={styles.cancelButton}
-                    textStyle={styles.cancelButtonText}
+                  <View style={{ flex: 1 }}>
+                    <MainTextInput
+                      label="Female"
+                      value={guestCounts.filipinoFemale}
+                      onChangeText={(value) => handleGuestCountChange('filipinoFemale', value)}
+                      keyboardType="numeric"
+                      variant="outlined"
+                      disabled={isViewMode}
+                      shrink={true}
+                    />
+                  </View>
+                </View>
+
+                {/* Foreign Nationality */}
+                <View style={styles.foreignNationalityHeader}>
+                  <Text style={[styles.subsectionTitle, { color: colors.text, fontFamily: fonts.gotham }]}>
+                    Foreign Nationality
+                  </Text>
+                  <InformationButton
+                    helperText="A foreign national who has been granted legal permission to reside permanently or indefinitely in the Philippines."
+                    iconSize={20}
                   />
                 </View>
-              </View>
-            </ScrollView>
+                <View style={styles.row}>
+                  <View style={{ flex: 1 }}>
+                    <MainTextInput
+                      label="Male"
+                      value={guestCounts.foreignMale}
+                      onChangeText={(value) => handleGuestCountChange('foreignMale', value)}
+                      keyboardType="numeric"
+                      variant="outlined"
+                      disabled={isViewMode}
+                      shrink={true}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <MainTextInput
+                      label="Female"
+                      value={guestCounts.foreignFemale}
+                      onChangeText={(value) => handleGuestCountChange('foreignFemale', value)}
+                      keyboardType="numeric"
+                      variant="outlined"
+                      disabled={isViewMode}
+                      shrink={true}
+                    />
+                  </View>
+                </View>
+
+                {/* OFWs Section */}
+                <FullUnderlineTitle text="Overseas Filipino Workers" />
+                <View style={styles.sectionSpacing} />
+                
+                <Text style={[styles.subsectionTitle, { color: colors.text, fontFamily: fonts.gotham }]}>
+                  Overseas Filipino Workers
+                </Text>
+                <View style={styles.row}>
+                  <View style={{ flex: 1 }}>
+                    <MainTextInput
+                      label="Male"
+                      value={guestCounts.ofwMale}
+                      onChangeText={(value) => handleGuestCountChange('ofwMale', value)}
+                      keyboardType="numeric"
+                      variant="outlined"
+                      disabled={isViewMode}
+                      shrink={true}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <MainTextInput
+                      label="Female"
+                      value={guestCounts.ofwFemale}
+                      onChangeText={(value) => handleGuestCountChange('ofwFemale', value)}
+                      keyboardType="numeric"
+                      variant="outlined"
+                      disabled={isViewMode}
+                      shrink={true}
+                    />
+                  </View>
+                </View>
+
+                {/* Non-Philippine Residents */}
+                <FullUnderlineTitle text="Non-Philippine Residents" />
+                <View style={styles.sectionSpacing} />
+
+                {nationalities.map((nation) => (
+                  <View key={nation.nationality}>
+                    <View style={styles.foreignNationalityHeader}>
+                      <Text style={[styles.subsectionTitle, { color: colors.text, fontFamily: fonts.gotham }]}>
+                        {nation.nationality}
+                      </Text>
+                      {!isViewMode && (
+                        <TouchableOpacity onPress={() => handleRemoveNationality(nation.nationality)}>
+                          <Ionicons name="trash" size={20} color="#EF1A25" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                    <View style={styles.row}>
+                      <View style={{ flex: 1 }}>
+                        <MainTextInput
+                          label="Male"
+                          value={nation.male_count}
+                          onChangeText={(value) => updateNationalityCount(nation.nationality, 'male', value)}
+                          keyboardType="numeric"
+                          variant="outlined"
+                          disabled={isViewMode}
+                          shrink={true}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <MainTextInput
+                          label="Female"
+                          value={nation.female_count}
+                          onChangeText={(value) => updateNationalityCount(nation.nationality, 'female', value)}
+                          keyboardType="numeric"
+                          variant="outlined"
+                          disabled={isViewMode}
+                          shrink={true}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                ))}
+
+                {/* Add Nationality Dropdown */}
+                {!isViewMode && (
+                  <MainSelectInput
+                    label="+ Add Nationality"
+                    value={selectedNationality}
+                    onChange={(value) => {
+                      handleAddNationality(value);
+                      setSelectedNationality('');
+                    }}
+                    options={nationalityOptions
+                      .filter((opt) => !nationalities.find((n) => n.nationality === opt))
+                      .map((opt) => ({ value: opt, label: opt }))}
+                    variant="outlined"
+                    placeholder="Select nationality"
+                  />
+                )}
+
+                {/* Total Guests */}
+                <MainTextInput
+                  label="Total Guests"
+                  value={String(totalGuests)}
+                  variant="outlined"
+                  disabled={true}
+                  shrink={true}
+                />
+
+                {/* Action Buttons */}
+                <View style={styles.buttonContainer}>
+                  {!isViewMode && (
+                    <View style={styles.buttonWrapper}>
+                      <DefaultButton
+                        label={isSubmitting ? <LoadingText text="Submitting..." /> : 'Submit'}
+                        onPress={handleSave}
+                        disabled={isSubmitting}
+                      />
+                    </View>
+                  )}
+                  <View style={styles.buttonWrapper}>
+                    <DefaultButton
+                      label={isViewMode ? 'Close' : 'Cancel'}
+                      onPress={handleCancel}
+                      isRed={!isViewMode}
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+            )}
           </View>
         </View>
       </Modal>
@@ -503,8 +644,8 @@ export default function GuestLogModal({
         label="SUBMIT REPORT"
         description={
           mode === 'add'
-            ? `Submit report for ${checkInDate}?`
-            : `Edit report for ${checkInDate}?`
+            ? `Submit report for ${formatDate(formData.check_in_date)}?`
+            : `Edit report for ${formatDate(formData.check_in_date)}?`
         }
         confirmButtonLabel="Yes, submit"
         cancelButtonLabel="No, nevermind"
@@ -514,7 +655,7 @@ export default function GuestLogModal({
       {/* Success Notification Modal */}
       <NotificationModal
         open={openNotificationModal}
-        label="SUCCESS"
+        label={mode === 'add' ? 'GUEST LOG SUCCESSFULLY ADDED' : 'GUEST LOG SUCCESSFULLY UPDATED'}
         description={
           mode === 'add' 
             ? 'Guest log has been submitted successfully' 
@@ -531,6 +672,14 @@ export default function GuestLogModal({
         open={isSubmitting}
         message={mode === 'edit' ? 'Updating report...' : 'Submitting report...'}
       />
+
+      {/* Error Snackbar */}
+      <MainSnackbar
+        open={errorSnackbar.open}
+        message={errorSnackbar.message}
+        severity="error"
+        onClose={() => setErrorSnackbar({ open: false, message: '' })}
+      />
     </>
   );
 }
@@ -544,7 +693,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 24,
     width: '100%',
@@ -552,8 +700,10 @@ const styles = StyleSheet.create({
     maxHeight: '90%',
     position: 'relative',
   },
-  modalContentDark: {
-    backgroundColor: '#1a1a1a',
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   closeButton: {
     position: 'absolute',
@@ -562,19 +712,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 8,
   },
-  closeButtonText: {
-    fontSize: 24,
-    color: '#666666',
-    fontWeight: '300',
-  },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000000',
     marginBottom: 12,
-  },
-  titleDark: {
-    color: '#ffffff',
   },
   sectionSpacing: {
     height: 16,
@@ -582,85 +723,25 @@ const styles = StyleSheet.create({
   subsectionTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000000',
     marginBottom: 8,
-  },
-  subsectionTitleDark: {
-    color: '#ffffff',
   },
   row: {
     flexDirection: 'row',
     gap: 12,
     marginBottom: 16,
   },
-  noBottomMargin: {
-    marginBottom: 0,
-  },
   foreignNationalityHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
-  },
-  infoIcon: {
-    marginLeft: 6,
-    padding: 2,
-  },
-  infoIconText: {
-    fontSize: 16,
-    color: '#666666',
+    gap: 4,
   },
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
     marginTop: 24,
-    marginBottom: 8,
   },
   buttonWrapper: {
     flex: 1,
-  },
-  cancelButton: {
-    backgroundColor: '#EF1A25',
-  },
-  cancelButtonText: {
-    color: '#ffffff',
-  },
-  saveButton: {
-    backgroundColor: '#D4A053',
-  },
-  confirmationModal: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 32,
-    width: '90%',
-    maxWidth: 400,
-    alignItems: 'center',
-  },
-  confirmationTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  confirmationText: {
-    fontSize: 15,
-    color: '#666666',
-    marginBottom: 24,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  confirmationTextDark: {
-    color: '#cccccc',
-  },
-  confirmationButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-  },
-  confirmationCancelButton: {
-    backgroundColor: '#E8E8E8',
-  },
-  successIconContainer: {
-    marginBottom: 16,
   },
 });

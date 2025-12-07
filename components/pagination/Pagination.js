@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function CustomPagination({
   count = 3,
@@ -19,8 +20,7 @@ export default function CustomPagination({
   hasPages = true,
   onRowsPerPageChange = () => {},
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const {colors, isDark, fonts} = useTheme();
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
   const perPageOptions = [5, 10, 20];
@@ -73,7 +73,7 @@ export default function CustomPagination({
           <Ionicons
             name="arrow-back"
             size={20}
-            color={page === 1 ? '#757575' : (isDark ? '#D5D6D7' : '#313638')}
+            color={page === 1 ? '#757575' : (isDark ? colors.text : '#313638')}
           />
         </TouchableOpacity>
 
@@ -86,7 +86,9 @@ export default function CustomPagination({
                   key={`ellipsis-${index}`}
                   style={[
                     styles.ellipsis,
-                    { color: isDark ? '#D5D6D7' : '#313638' }
+                    { color: isDark ? colors.text : '#313638',
+                      fontFamily: fonts.gotham
+                    }
                   ]}
                 >
                   ...
@@ -107,7 +109,7 @@ export default function CustomPagination({
                 <Text
                   style={[
                     styles.pageButtonText,
-                    { color: isDark ? '#D5D6D7' : '#313638' },
+                    { color: isDark ? colors.text : '#313638', fontFamily: fonts.gotham },
                     isActive && styles.pageButtonTextActive,
                   ]}
                 >
@@ -130,7 +132,7 @@ export default function CustomPagination({
           <Ionicons
             name="arrow-forward"
             size={20}
-            color={page === count ? '#757575' : (isDark ? '#D5D6D7' : '#313638')}
+            color={page === count ? '#757575' : (isDark ? colors.text : '#313638')}
           />
         </TouchableOpacity>
       </View>
@@ -140,7 +142,7 @@ export default function CustomPagination({
         <View style={styles.rowsPerPageContainer}>
           <Text style={[
             styles.rowsPerPageLabel,
-            { color: isDark ? '#E5E7EB' : '#313638' }
+            { color: isDark ? colors.text : '#313638', fontFamily: fonts.gotham }
           ]}>
             No. of pages:
           </Text>
@@ -149,12 +151,12 @@ export default function CustomPagination({
             onPress={() => setDropdownVisible(true)}
             style={[
               styles.dropdownButton,
-              { borderColor: isDark ? '#6B7280' : '#C0BFBF' }
+              { borderColor: isDark ? colors.border : '#9CA3AF' },
             ]}
           >
             <Text style={[
               styles.dropdownButtonText,
-              { color: isDark ? '#E5E7EB' : '#313638' }
+              { color: isDark ? colors.text : '#313638', fontFamily: fonts.gotham }
             ]}>
               {rowsPerPage}
             </Text>
@@ -178,7 +180,7 @@ export default function CustomPagination({
             >
               <View style={[
                 styles.dropdownMenu,
-                { backgroundColor: isDark ? '#000000' : '#FFFFFF' }
+                { backgroundColor: isDark ? colors.surface : '#ffffff' }
               ]}>
                 {perPageOptions.map((option) => (
                   <TouchableOpacity
@@ -191,7 +193,7 @@ export default function CustomPagination({
                   >
                     <Text style={[
                       styles.dropdownItemText,
-                      { color: isDark ? '#E5E7EB' : '#313638' }
+                      { color: isDark ? colors.text : '#313638', fontFamily: fonts.gotham }
                     ]}>
                       {option}
                     </Text>

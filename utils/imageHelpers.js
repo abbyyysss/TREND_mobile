@@ -1,27 +1,50 @@
 // utils/imageHelpers.js
-// For Expo, you'll typically store your backend URL in app.config.js or as an environment variable
-import Constants from 'expo-constants';
+import { BASE_URL } from '@/services/Constants';
 
+/**
+ * Builds a complete media URL from a path
+ * @param {string} path - The media path (e.g., "/media/images/photo.jpg")
+ * @returns {string|null} - Complete URL or null if path is invalid
+ */
 export function buildMediaUrl(path) {
   if (!path) return null;
   
-  // Access environment variables in Expo
-  // Option 1: From app.config.js extra field
-  const backendBase = Constants.expoConfig?.extra?.backendUrl || 
-                      // Option 2: From environment (if using expo-constants)
-                      process.env.EXPO_PUBLIC_BACKEND_URL ||
-                      // Fallback for development
-                      "http://localhost:8000";
+  // If path already has a protocol (http/https), return as-is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
   
-  return path.startsWith("/media") ? `${backendBase}${path}` : path;
+  // If path starts with /media, prepend BASE_URL
+  if (path.startsWith('/media')) {
+    return `${BASE_URL.replace(/\/$/, '')}${path}`;
+  }
+  
+  // If path doesn't start with /, add it
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${BASE_URL.replace(/\/$/, '')}${normalizedPath}`;
 }
 
-// Alternative buildMediaUrl without expo-constants dependency
-export function buildMediaUrlSimple(path) {
-  if (!path) return null;
+/**
+ * Builds a complete image URL specifically for image resources
+ * @param {string} imagePath - The image path
+ * @returns {string|null} - Complete image URL or null
+ */
+export function buildImageUrl(imagePath) {
+  return buildMediaUrl(imagePath);
+}
+
+/**
+ * Checks if a URL is valid and accessible
+ * @param {string} url - The URL to validate
+ * @returns {boolean} - True if valid URL format
+ */
+export function isValidUrl(url) {
+  if (!url) return false;
   
-  // You can hardcode or use a config file
-  const backendBase = "http://localhost:8000"; // or your production URL
-  
-  return path.startsWith("/media") ? `${backendBase}${path}` : path;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }

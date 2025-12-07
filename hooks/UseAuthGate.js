@@ -9,7 +9,7 @@ import { ACCESS_TOKEN } from '@/services/Constants';
  *  - Redirects to login if unauthenticated
  *  - Redirects to forbiddenPath if role is not allowed
  */
-export default function UseAuthGate({
+export default function useAuthGate({
   isAuthenticated,
   loading,
   role,                 // <-- pass the resolved user role here

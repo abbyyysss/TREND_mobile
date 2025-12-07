@@ -76,7 +76,7 @@ export default function MainTextInput({
 
   const labelFontSize = labelAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [16, isOutlined ? 13 : 12],
+    outputRange: [15, isOutlined ? 13 : 12],
   });
 
   // Outlined variant
@@ -264,7 +264,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 16,
-    paddingBottom: 4,
+    paddingTop: 3,
+    paddingBottom: 6,
     position: 'relative',
   },
   fieldsetFocused: {

@@ -3,117 +3,107 @@ import {
   View,
   Text,
   Modal,
-  ScrollView,
   StyleSheet,
-  useColorScheme,
-  useWindowDimensions,
+  Pressable,
 } from 'react-native';
 import SecondaryModalHeader from '@/components/header/SecondaryModalHeader';
 import DefaultButton from '../button/DefaultButton';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
-export default function NotificationModal({ 
-  open, 
-  onClose, 
-  label, 
-  description 
-}) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const { width } = useWindowDimensions();
-
-  const backgroundColor = isDark ? '#000000' : '#FFFFFF';
-  const textColor = isDark ? '#d1d5db' : '#111827';
-  const borderColor = '#DADADA';
-  
-  const isMdUp = width >= 768;
-  const fontSize = isMdUp ? 15 : 13;
-  const gap = isMdUp ? 30 : 20;
-  const horizontalPadding = isMdUp ? 40 : 20;
-  const buttonPaddingX = isMdUp ? 40 : 30;
+export default function NotificationModal({ open, onClose, label, description }) {
+  const { colors, spacing, typography, radius, isDark } = useTheme();
 
   return (
     <Modal
       visible={open}
-      transparent
       animationType="fade"
+      transparent={true}
       onRequestClose={onClose}
-      statusBarTranslucent
     >
-      <View style={styles.overlay}>
-        <View style={[
-          styles.modalContainer,
-          { 
-            backgroundColor,
-            borderColor,
-          }
-        ]}>
-          {/* Header */}
-          <SecondaryModalHeader onClose={onClose} label={label} />
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <Pressable
+          style={[
+            styles.modalContent,
+            {
+              backgroundColor: isDark ? '#000' : '#fff',
+              borderColor: '#DADADA',
+              borderRadius: radius.xl,
+            },
+          ]}
+          onPress={(e) => e.stopPropagation()}
+        >
+          <View style={styles.modalInner}>
+            {/* Header */}
+            <View style={styles.stickyHeader}>
+              <SecondaryModalHeader onClose={onClose} label={label} />
+            </View>
 
-          {/* Scrollable Content */}
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={[
-              styles.contentContainer,
-              { 
-                gap,
-                paddingHorizontal: horizontalPadding,
-              }
-            ]}
-          >
-            <Text style={[styles.description, { color: textColor }]}>
-              {description}
-            </Text>
-
-            {/* Button */}
-            <View style={{ paddingHorizontal: buttonPaddingX }}>
+            {/* Content */}
+            <View
+              style={[
+                styles.contentContainer,
+                {
+                  gap: spacing.lg,
+                  paddingHorizontal: spacing.lg,
+                  paddingVertical: spacing.xl,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.descriptionText,
+                  {
+                    color: isDark ? '#d1d5db' : '#111827',
+                    fontSize: typography.fontSize.sm,
+                  },
+                ]}
+              >
+                {description}
+              </Text>
               <DefaultButton
+                classProps="text-[13px] md:text-[15px] py-[5px] px-[30px] md:px-[40px]"
                 label="Okay"
-                onPress={onClose}
                 fullWidth={false}
-                fontSize={fontSize}
+                onClick={onClose}
               />
             </View>
-          </ScrollView>
-        </View>
-      </View>
+          </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
   },
-  modalContainer: {
-    width: '100%',
-    maxWidth: 600,
-    borderRadius: 20,
+  modalContent: {
+    width: '90%',
+    maxWidth: 500,
     borderWidth: 1,
-    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 24,
-    elevation: 12,
+    elevation: 8,
   },
-  scrollView: {
-    maxHeight: '80%',
+  modalInner: {
+    width: '100%',
+  },
+  stickyHeader: {
+    width: '100%',
   },
   contentContainer: {
-    paddingVertical: 40,
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
-  description: {
+  descriptionText: {
     textAlign: 'center',
-    fontSize: 15,
-    lineHeight: 22,
   },
 });

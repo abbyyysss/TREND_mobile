@@ -15,7 +15,7 @@ export default function RegisterProgressNav() {
     { id: '3', name: 'Contact and Address', path: '/register/contact-address' },
     { id: '4', name: 'Accreditation', path: '/register/accreditation' },
     { id: '5', name: 'Star Rating', path: '/register/star-rating' },
-    { id: '6', name: 'Guest Log Setup', path: '/register/reporting-mode' },
+    { id: '6', name: 'Reporting Mode', path: '/register/reporting-mode' },
     { id: '7', name: 'Finishing Up', path: '/register/finishing-up' },
   ];
 

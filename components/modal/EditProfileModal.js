@@ -1,86 +1,45 @@
 import React, { useState } from 'react';
 import {
-  Modal,
   View,
-  ScrollView,
-  StyleSheet,
-  useColorScheme,
-  Dimensions,
   Text,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
   Image,
+  StyleSheet,
+  Pressable,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import PrimaryModalHeader from '@/components/header/PrimaryModalHeader';
-import EditProfileHeaderButton from '@/components/button/EditProfileHeaderButton';
-// import EditProfileInfoModal from './EditAccountInfoModal';
-// import UploadPhotoModal from './UploadPhotoModal';
-// import { useAuth } from '@/context/authContext';
-// import { buildMediaUrl } from '@/utils/imageHelpers';
+import EditProfileHeaderButton from '../button/EditProfileHeaderButton';
+import EditProfileInfoModal from './EditAccountInfoModal';
+import UploadPhotoModal from './UploadPhotoModal';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/assets/theme/ThemeContext';
+import { buildMediaUrl } from '@/utils/imageHelpers';
 
-const { height } = Dimensions.get('window');
-
-export default function EditProfileModal({
-  open,
-  onClose,
-  profile,
-  account,
-  role,
-}) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  // const { user, loading } = useAuth();
-
+export default function EditProfileModal({ open, onClose, profile, account, role }) {
   const [openEditProfileInfoModal, setOpenEditProfileInfoModal] = useState(false);
   const [uploadPhotoContext, setUploadPhotoContext] = useState(null);
+  const { colors, spacing, typography, radius, isDark } = useTheme();
 
-  // Mock data - replace with actual context
-  const loading = false;
+  const { user, loading } = useAuth();
   const isAE = role === 'AE';
 
-  // Mock profile and account data
-  const mockProfile = {
-    establishment_name: 'Grand Hotel',
-    region: 'NCR',
-    street_address: '123 Main St',
-    barangay: 'Brgy. Sample',
-    city_municipality: 'Quezon City',
-    province: 'Metro Manila',
-    accreditation_status: true,
-    user: {
-      profile_photo: undefined,
-      cover_photo: undefined,
-    },
-  };
-
-  const mockAccount = {
-    username: 'grandhotel',
-    contact_num: '+63 912 345 6789',
-    email: 'contact@grandhotel.com',
-  };
-
-  const currentProfile = profile || mockProfile;
-  const currentAccount = account || mockAccount;
-
-  const profilePhoto = currentProfile.user?.profile_photo || null;
-  const coverPhoto = currentProfile.user?.cover_photo || null;
+  const profilePhoto =
+    buildMediaUrl(profile?.user?.profile_photo) || require('@/assets/Profile/default-profile-photo.png');
+  
+  const coverPhoto =
+    buildMediaUrl(profile?.user?.cover_photo) || require('@/assets/Profile/default-cover-photo.png');
 
   const name = isAE
-    ? currentProfile.establishment_name ||
-      currentProfile.business_name ||
-      currentAccount.username ||
-      '—'
-    : `DOT ${currentProfile.region || ''}`.trim() || currentAccount.username || '—';
+    ? profile?.establishment_name || profile?.business_name || account?.username || '—'
+    : `DOT ${profile?.region || ''}`.trim() || account?.username || '—';
 
   const type = isAE ? 'Accommodation Establishment' : 'Regional Office';
-  const contact = currentAccount.contact_num || '—';
-  const email = currentAccount.email || '—';
+  const contact = account?.contact_num || '—';
+  const email = account?.email || '—';
   const address = isAE
-    ? [
-        currentProfile.street_address,
-        currentProfile.barangay,
-        currentProfile.city_municipality,
-        currentProfile.province,
-      ]
+    ? [profile?.street_address, profile?.barangay, profile?.city_municipality, profile?.province]
         .filter(Boolean)
         .join(', ')
     : '—';
@@ -93,17 +52,19 @@ export default function EditProfileModal({
           {
             id: '3',
             title: 'Accreditation Status',
-            data: currentProfile.accreditation_status
-              ? 'Accredited'
-              : 'Unaccredited',
-            isAccreditation: true,
-            isAccredited: !!currentProfile.accreditation_status,
+            data: profile?.accreditation_status ? 'Accredited' : 'Unaccredited',
+            _isAccreditation: true,
+            _isAccredited: !!profile?.accreditation_status,
           },
         ]
       : []),
     { id: '4', title: 'Contact Number', data: loading ? 'Loading…' : contact },
     { id: '5', title: 'Email', data: loading ? 'Loading…' : email },
-    ...(isAE ? [{ id: '6', title: 'Address', data: loading ? 'Loading…' : address }] : []),
+    ...(isAE 
+      ? [
+        { id: '6', title: 'Address', data: loading ? 'Loading…' : address },
+      ]
+      : []),
     { id: '7', title: 'Password', data: loading ? 'Loading…' : '********' },
   ];
 
@@ -111,229 +72,211 @@ export default function EditProfileModal({
     <>
       <Modal
         visible={open}
-        transparent
         animationType="slide"
+        transparent={true}
         onRequestClose={onClose}
       >
-        <View style={styles.overlay}>
-          <View
+        <Pressable style={styles.modalOverlay} onPress={onClose}>
+          <Pressable
             style={[
-              styles.container,
+              styles.modalContent,
               {
-                backgroundColor: isDark ? '#000' : '#fff',
-                borderColor: '#DADADA',
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+                borderRadius: radius.xl,
               },
             ]}
+            onPress={(e) => e.stopPropagation()}
           >
-            <PrimaryModalHeader onClose={onClose} label="Edit Profile" />
-
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.content}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Photos Section */}
-              <View style={styles.photoSection}>
-                <EditProfileHeaderButton
-                  text="Profile Picture"
-                  onPress={() => setUploadPhotoContext('profile')}
-                />
-                <View style={styles.profilePhotoContainer}>
-                  {profilePhoto ? (
-                    <Image
-                      source={{ uri: profilePhoto }}
-                      style={styles.profilePhoto}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        styles.profilePhoto,
-                        styles.placeholderPhoto,
-                        { backgroundColor: isDark ? '#333' : '#e5e7eb' },
-                      ]}
-                    >
-                      <Ionicons
-                        name="person"
-                        size={60}
-                        color={isDark ? '#666' : '#9ca3af'}
-                      />
-                    </View>
-                  )}
-                </View>
-
-                <EditProfileHeaderButton
-                  text="Cover Photo"
-                  onPress={() => setUploadPhotoContext('cover')}
-                />
-                <View style={styles.coverPhotoContainer}>
-                  {coverPhoto ? (
-                    <Image
-                      source={{ uri: coverPhoto }}
-                      style={styles.coverPhoto}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        styles.coverPhoto,
-                        styles.placeholderPhoto,
-                        { backgroundColor: isDark ? '#333' : '#e5e7eb' },
-                      ]}
-                    >
-                      <Ionicons
-                        name="image"
-                        size={40}
-                        color={isDark ? '#666' : '#9ca3af'}
-                      />
-                    </View>
-                  )}
-                </View>
+            <View style={styles.modalInner}>
+              {/* Sticky Header */}
+              <View style={styles.stickyHeader}>
+                <PrimaryModalHeader onClose={onClose} label="Edit Profile" />
               </View>
 
-              {/* Info Section */}
-              <View
-                style={[
-                  styles.infoSection,
-                  { borderTopColor: '#D9D9D9' },
-                ]}
+              {/* Scrollable content */}
+              <ScrollView 
+                style={styles.scrollView} 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: spacing.xl }}
               >
-                <EditProfileHeaderButton
-                  text="User Information"
-                  onPress={() => setOpenEditProfileInfoModal(true)}
-                />
+                {/* Photos Section */}
+                <View style={[styles.photosSection, { paddingVertical: spacing.lg }]}>
+                  <View style={[styles.photoContainer, { gap: spacing.md }]}>
+                    <EditProfileHeaderButton
+                      text="Profile Picture"
+                      onClick={() => setUploadPhotoContext('profile')}
+                    />
+                    <Image
+                      source={typeof profilePhoto === 'string' ? { uri: profilePhoto } : profilePhoto}
+                      style={[
+                        styles.profilePhoto,
+                        { 
+                          borderColor: colors.border,
+                          marginBottom: spacing.xl,
+                        },
+                      ]}
+                    />
+                    <EditProfileHeaderButton
+                      text="Cover Photo"
+                      onClick={() => setUploadPhotoContext('cover')}
+                    />
+                    <Image
+                      source={typeof coverPhoto === 'string' ? { uri: coverPhoto } : coverPhoto}
+                      style={[
+                        styles.coverPhoto,
+                        { 
+                          borderColor: colors.border,
+                          marginBottom: spacing.xl,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
 
-                <View style={styles.infoList}>
+                {/* Info Section */}
+                <View
+                  style={[
+                    styles.infoSection,
+                    {
+                      borderTopColor: colors.border,
+                      paddingTop: spacing.sm,
+                      paddingBottom: spacing.xl,
+                      paddingHorizontal: spacing.md,
+                    },
+                  ]}
+                >
+                  <EditProfileHeaderButton
+                    text="User Information"
+                    onClick={() => setOpenEditProfileInfoModal(true)}
+                  />
                   {infos.map((info) => {
-                    const isAccreditation = info.isAccreditation === true;
+                    const isAccreditation = info._isAccreditation === true;
 
                     return (
-                      <View key={info.id} style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>{info.title}</Text>
+                      <View
+                        key={info.id}
+                        style={[
+                          styles.infoRow,
+                          { 
+                            paddingTop: spacing.sm,
+                            gap: spacing.md,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.infoLabel,
+                            {
+                              color: '#828282',
+                              fontSize: typography.fontSize.sm,
+                            },
+                          ]}
+                        >
+                          {info.title}
+                        </Text>
                         <View style={styles.infoValueContainer}>
                           <Text
                             style={[
                               styles.infoValue,
-                              { color: isDark ? '#d5d6d7' : '#313638' },
+                              { 
+                                color: isDark ? '#d5d6d7' : '#313638',
+                                fontSize: typography.fontSize.sm,
+                              },
                             ]}
                           >
                             {info.data}
                           </Text>
                           {isAccreditation &&
-                            (info.isAccredited ? (
-                              <Ionicons
-                                name="checkmark-circle"
-                                size={18}
-                                color="#8DC641"
-                              />
+                            (info._isAccredited ? (
+                              <Text style={{ color: '#8DC641', fontSize: 16 }}>✓</Text>
                             ) : (
-                              <Ionicons
-                                name="close-circle"
-                                size={18}
-                                color="#EF4444"
-                              />
+                              <Text style={{ color: '#EF4444', fontSize: 16 }}>✗</Text>
                             ))}
                         </View>
                       </View>
                     );
                   })}
                 </View>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
+              </ScrollView>
+            </View>
+          </Pressable>
+        </Pressable>
       </Modal>
 
-      {/* Edit Profile Info Modal - commented out until implemented */}
-      {/*
       <EditProfileInfoModal
         open={openEditProfileInfoModal}
         onClose={() => setOpenEditProfileInfoModal(false)}
       />
-      */}
 
-      {/* Upload Photo Modal - commented out until implemented */}
-      {/*
       <UploadPhotoModal
         open={!!uploadPhotoContext}
         onClose={() => setUploadPhotoContext(null)}
         label={uploadPhotoContext === 'profile' ? 'PROFILE PHOTO' : 'COVER PHOTO'}
         description={
           uploadPhotoContext === 'profile'
-            ? 'Profile photo changed successfully.'
+            ? 'Profile photo changed succesfully.'
             : 'Cover photo changed successfully.'
         }
       />
-      */}
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  container: {
-    height: height * 0.95,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+  modalContent: {
+    width: '95%',
+    height: '95%',
     borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 24,
     elevation: 8,
   },
+  modalInner: {
+    flex: 1,
+  },
+  stickyHeader: {
+    zIndex: 10,
+  },
   scrollView: {
     flex: 1,
   },
-  content: {
-    paddingBottom: 40,
+  photosSection: {
+    width: '100%',
+    paddingHorizontal: 10,
   },
-  photoSection: {
-    paddingVertical: 25,
-    paddingHorizontal: 20,
+  photoContainer: {
     alignItems: 'center',
-    gap: 20,
-  },
-  profilePhotoContainer: {
-    marginBottom: 40,
   },
   profilePhoto: {
-    width: 140,
     height: 140,
+    width: 140,
     borderRadius: 70,
-  },
-  coverPhotoContainer: {
-    width: '90%',
-    marginBottom: 40,
+    borderWidth: 2,
   },
   coverPhoto: {
-    width: '100%',
     height: 140,
+    width: '90%',
     borderRadius: 8,
-  },
-  placeholderPhoto: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 2,
   },
   infoSection: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    width: '100%',
     borderTopWidth: 1,
-  },
-  infoList: {
-    gap: 15,
-    marginTop: 10,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 20,
   },
   infoLabel: {
-    fontSize: 12,
-    color: '#828282',
     width: 100,
     flexShrink: 0,
   },
@@ -342,9 +285,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexWrap: 'wrap',
   },
   infoValue: {
-    fontSize: 13,
     flex: 1,
   },
 });

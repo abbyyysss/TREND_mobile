@@ -3,11 +3,10 @@ import {
   View,
   Text,
   ScrollView,
-  useColorScheme,
   Pressable,
   StyleSheet,
 } from 'react-native';
-import DefaultButton from '../button/DefaultButton';
+import { useTheme } from '@/assets/theme/ThemeContext';
 import { formatReadableNumber } from '@/utils/numberFormatter';
 
 export default function GuestLogTable({ openGuestLogModal, data, loading }) {
@@ -15,32 +14,31 @@ export default function GuestLogTable({ openGuestLogModal, data, loading }) {
   console.log("Table data:", data);
   console.log("Loading:", loading);
 
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, isDark, spacing, typography, radius } = useTheme();
 
   return (
-    <View style={[styles.container, styles.tableContainer(isDark)]}>
+    <View style={[styles.container, styles.tableContainer(colors)]}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.tableWrapper}>
           {/* Table Header */}
-          <View style={[styles.headerRow, styles.headerCellStyles(isDark)]}>
+          <View style={[styles.headerRow, styles.headerCellStyles(colors)]}>
             <View style={[styles.cell, styles.cellCheckInDate]}>
-              <Text style={styles.headerText(isDark)}>Check in date</Text>
+              <Text style={styles.headerText(colors, typography)}>Check in date</Text>
             </View>
             <View style={[styles.cell, styles.cellCheckInTime]}>
-              <Text style={styles.headerText(isDark)}>Checked in at</Text>
+              <Text style={styles.headerText(colors, typography)}>Checked in at</Text>
             </View>
             <View style={[styles.cell, styles.cellRoomID]}>
-              <Text style={styles.headerText(isDark)}>Room ID</Text>
+              <Text style={styles.headerText(colors, typography)}>Room ID</Text>
             </View>
             <View style={[styles.cell, styles.cellNoOfGuests]}>
-              <Text style={styles.headerText(isDark)}>No. of guests</Text>
+              <Text style={styles.headerText(colors, typography)}>No. of guests</Text>
             </View>
             <View style={[styles.cell, styles.cellLengthOfStay]}>
-              <Text style={styles.headerText(isDark)}>Length of stay (in nights)</Text>
+              <Text style={styles.headerText(colors, typography)}>Length of stay (in nights)</Text>
             </View>
             <View style={[styles.cell, styles.cellActions]}>
-              <Text style={styles.headerText(isDark)}>Actions</Text>
+              <Text style={styles.headerText(colors, typography)}>Actions</Text>
             </View>
           </View>
 
@@ -51,50 +49,50 @@ export default function GuestLogTable({ openGuestLogModal, data, loading }) {
                 key={row.id}
                 style={({ pressed }) => [
                   styles.bodyRow,
-                  styles.bodyCellStyles(isDark),
-                  styles.rowHoverStyles(isDark, pressed),
+                  styles.bodyCellStyles(colors),
+                  styles.rowHoverStyles(colors, pressed),
                 ]}
               >
                 <View style={[styles.cell, styles.cellCheckInDate]}>
-                  <Text style={styles.bodyText(isDark)}>{row.checkInDate}</Text>
+                  <Text style={styles.bodyText(colors, typography)}>{row.checkInDate}</Text>
                 </View>
                 <View style={[styles.cell, styles.cellCheckInTime]}>
-                  <Text style={styles.bodyText(isDark)}>{row.checkInAt}</Text>
+                  <Text style={styles.bodyText(colors, typography)}>{row.checkInAt}</Text>
                 </View>
                 <View style={[styles.cell, styles.cellRoomID]}>
-                  <Text style={styles.bodyText(isDark)}>{row.room_id}</Text>
+                  <Text style={styles.bodyText(colors, typography)}>{row.room_id}</Text>
                 </View>
                 <View style={[styles.cell, styles.cellNoOfGuests]}>
-                  <Text style={styles.bodyText(isDark)}>
+                  <Text style={styles.bodyText(colors, typography)}>
                     {formatReadableNumber(row.noOfGuests)}
                   </Text>
                 </View>
                 <View style={[styles.cell, styles.cellLengthOfStay]}>
-                  <Text style={styles.bodyText(isDark)}>
+                  <Text style={styles.bodyText(colors, typography)}>
                     {formatReadableNumber(row.lengthOfStay)}
                   </Text>
                 </View>
                 <View style={[styles.cell, styles.cellActions, styles.actionsCell]}>
-                  <View style={styles.actionButtons}>
+                  <View style={styles.actionButtons(spacing)}>
                     <Pressable
                       style={({ pressed }) => [
-                        styles.actionButton,
-                        styles.viewButton(isDark),
-                        pressed && styles.viewButtonPressed(isDark),
+                        styles.actionButton(spacing, radius),
+                        styles.viewButton,
+                        pressed && styles.viewButtonPressed,
                       ]}
                       onPress={() => openGuestLogModal("view", row.id)}
                     >
-                      <Text style={styles.viewButtonText(isDark)}>View</Text>
+                      <Text style={styles.viewButtonText(colors, typography)}>View</Text>
                     </Pressable>
                     <Pressable
                       style={({ pressed }) => [
-                        styles.actionButton,
-                        styles.editButton(isDark),
-                        pressed && styles.editButtonPressed(isDark),
+                        styles.actionButton(spacing, radius),
+                        styles.editButton,
+                        pressed && styles.editButtonPressed,
                       ]}
                       onPress={() => openGuestLogModal("edit", row.id)}
                     >
-                      <Text style={styles.editButtonText(isDark)}>Edit</Text>
+                      <Text style={styles.editButtonText(colors, typography)}>Edit</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -112,8 +110,8 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
-  tableContainer: (isDark) => ({
-    backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+  tableContainer: (colors) => ({
+    backgroundColor: colors.card,
     borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -121,6 +119,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
   }),
   tableWrapper: {
     minWidth: '100%',
@@ -131,14 +131,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
-  headerCellStyles: (isDark) => ({
-    borderBottomColor: isDark ? '#404040' : '#e0e0e0',
+  headerCellStyles: (colors) => ({
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   }),
-  headerText: (isDark) => ({
-    fontSize: 14,
-    fontStyle: 'bold',
-    fontWeight: '600',
-    color: isDark ? '#ffffff' : '#333333',
+  headerText: (colors, typography) => ({
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.weight.semibold,
+    color: colors.text,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   }),
@@ -148,28 +148,22 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
-  bodyCellStyles: (isDark) => ({
-    borderBottomColor: isDark ? '#2a2a2a' : '#f0f0f0',
+  bodyCellStyles: (colors) => ({
+    borderBottomColor: colors.border,
   }),
-  bodyText: (isDark) => ({
-    fontSize: 14,
-    color: isDark ? '#e0e0e0' : '#333333',
-    fontWeight: '400',
+  bodyText: (colors, typography) => ({
+    fontSize: typography.fontSize.sm,
+    color: colors.text,
+    fontWeight: typography.weight.regular,
   }),
-  rowHoverStyles: (isDark, pressed) => ({
-    backgroundColor: pressed
-      ? isDark
-        ? '#2a2a2a'
-        : '#f9f9f9'
-      : isDark
-      ? '#1a1a1a'
-      : '#ffffff',
+  rowHoverStyles: (colors, pressed) => ({
+    backgroundColor: pressed ? colors.surface : colors.card,
   }),
   cell: {
     justifyContent: 'center',
     paddingHorizontal: 8,
   },
-  // Column widths - optimized to reduce waste
+  // Column widths
   cellCheckInDate: {
     width: 200,
   },
@@ -186,7 +180,7 @@ const styles = StyleSheet.create({
     width: 190,
   },
   cellActions: {
-    width: 130, // Significantly reduced from 240
+    width: 130,
   },
   actionsCell: {
     paddingHorizontal: 0,
@@ -194,43 +188,43 @@ const styles = StyleSheet.create({
   tableBody: {
     flex: 1,
   },
-  actionButtons: {
+  actionButtons: (spacing) => ({
     flexDirection: 'row',
-    gap: 6, // Reduced from 12 to 6
+    gap: spacing.xs,
     flexWrap: 'wrap',
-    paddingLeft: 8,
-  },
+    paddingLeft: spacing.sm,
+  }),
   // Action Button Styles
-  actionButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 8, // Reduced from 10
-    borderRadius: 4,
-    minWidth: 50, // Reduced from 60
+  actionButton: (spacing, radius) => ({
+    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm,
+    minWidth: 50,
     alignItems: 'center',
     justifyContent: 'center',
+  }),
+  viewButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
-  viewButton: (isDark) => ({
+  viewButtonPressed: {
+    opacity: 0.7,
+  },
+  viewButtonText: (colors, typography) => ({
+    color: colors.primary,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.weight.medium,
+  }),
+  editButton: {
     backgroundColor: 'transparent',
     borderWidth: 0,
-  }),
-  viewButtonPressed: (isDark) => ({
+  },
+  editButtonPressed: {
     opacity: 0.7,
-  }),
-  viewButtonText: (isDark) => ({
-    color: '#2196F3',
-    fontSize: 14,
-    fontWeight: '500',
-  }),
-  editButton: (isDark) => ({
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-  }),
-  editButtonPressed: (isDark) => ({
-    opacity: 0.7,
-  }),
-  editButtonText: (isDark) => ({
-    color: '#D4A053',
-    fontSize: 14,
-    fontWeight: '500',
+  },
+  editButtonText: (colors, typography) => ({
+    color: '#D4AF37',
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.weight.medium,
   }),
 });

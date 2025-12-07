@@ -1,27 +1,26 @@
 
 import React from 'react';
-import { View, ScrollView, StyleSheet, useColorScheme } from 'react-native';
+import { View, ScrollView, StyleSheet, } from 'react-native';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function MainCard({
   children,
-  borderColor = '#9ca3af',
   shadowColor = '#9ca3af',
   borderRadius = 8,
   scrollable = false,
   padding = 0,
   style = {},
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const {fonts, colors, isDark} = useTheme();
 
   const containerStyle = [
     mainStyles.container,
     {
-      borderColor,
+      borderColor: colors.border,
       borderRadius,
       padding,
+      backgroundColor: isDark ? colors.surface : '#fff',
     },
-    isDark && mainStyles.containerDark,
     style,
   ];
 
