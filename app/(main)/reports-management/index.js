@@ -7,7 +7,8 @@ import {
 } from 'react-native';
 import { useTheme } from '@/assets/theme/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { fetchMergedReports, MonthlyReportService } from '@/services/ReportService';
+import { fetchMergedReports } from '@/services/ReportService';
+import MonthlyReportService from '@/services/ReportService';
 import StatsCard from '@/components/card/StatsCard';
 import Pagination from '@/components/pagination/Pagination';
 import ReportFilterNav from '@/components/navigation/ReportFilterNav';
@@ -24,6 +25,7 @@ import DownloadButton from '@/components/button/DownloadButton';
 import { convertMonthToNumber } from '@/utils/dateUtils';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import MainSnackbar from '@/components/snackbar/MainSnackbar';
 
 export default function ReportsManagement() {
   const { colors, spacing } = useTheme();
@@ -64,9 +66,23 @@ export default function ReportsManagement() {
   const [modalMode, setModalMode] = useState('add');
   const [selectedReport, setSelectedReport] = useState(null);
 
+  // Error snackbar state
+  const [errorSnackbar, setErrorSnackbar] = useState({
+    open: false,
+    message: '',
+  });
+
   const handleDownload = async () => {
     try {
-      const period = `${selectedYear}-12-1`; // example: 2025-12-1
+      if (!selectedYear) {
+        setErrorSnackbar({
+          open: true,
+          message: 'Please select a year to export reports.',
+        });
+        return;
+      }
+
+      const period = `${selectedYear}-12-01`; // Format: YYYY-MM-DD
 
       // Call the export API
       const fileBlob = await MonthlyReportService.exportReports({
@@ -91,11 +107,18 @@ export default function ReportsManagement() {
         if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(fileUri);
         } else {
-          console.log('Sharing is not available on this device');
+          setErrorSnackbar({
+            open: true,
+            message: 'Sharing is not available on this device',
+          });
         }
       };
     } catch (error) {
       console.error('Download error:', error);
+      setErrorSnackbar({
+        open: true,
+        message: error?.response?.data?.detail || 'Failed to export reports. Please try again.',
+      });
     }
   };
 
@@ -217,7 +240,7 @@ export default function ReportsManagement() {
 
   useEffect(() => {
     if (!myProfileId || !selectedYear || !statsLoadedRef.current) {
-      setLoading(false); // ✅ Ensure it stops loading
+      setLoading(false);
       return;
     }
 
@@ -295,88 +318,90 @@ export default function ReportsManagement() {
   }, [loadStatsAndYears, loadCurrentMonthReportStatus, loadPaginatedReports, selectedYear]);
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ padding: spacing.lg }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <View style={{ gap: spacing.lg }}>
-        {/* Summary Card - now with reportStatus prop */}
-        <SummaryCard
-          onOpenMonthlyReport={() => handleOpenMonthlyReport('add')}
-          reportStatus={currentMonthReportStatus}
-        />
+    <>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: colors.background }}
+        contentContainerStyle={{ padding: spacing.lg }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        <View style={{ gap: spacing.lg }}>
+          {/* Summary Card - now with reportStatus prop */}
+          <SummaryCard
+            onOpenMonthlyReport={() => handleOpenMonthlyReport('add')}
+            reportStatus={currentMonthReportStatus}
+          />
 
-        {/* Year Filter */}
-        <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-          <View style={{ flex: 1 }}>
-            <FilterSelectInput
-              placeholder="Select Year"
-              options={statsCache.availableYears}
-              value={selectedYear}
-              onSelect={handleYearChange}
+          {/* Year Filter */}
+          <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+            <View style={{ flex: 1 }}>
+              <FilterSelectInput
+                placeholder="Select Year"
+                options={statsCache.availableYears}
+                value={selectedYear}
+                onSelect={handleYearChange}
+              />
+            </View>
+            <View style={{ marginTop: spacing.md }}>
+              <DownloadButton
+                iconSize={40}
+                text={`Export all ${selectedYear} reports`}
+                onClick={handleDownload}
+              />
+            </View>
+          </View>
+
+          {/* Stats Section */}
+          <View style={{ gap: spacing.md }}>
+            <StatsCard
+              titleText="Flagged Reports"
+              statsText={formatReadableNumber(statsCache.flaggedCount)}
+              withPercentage={false}
+              isRed={true}
+            />
+            <StatsCard
+              titleText="Missing Reports"
+              statsText={formatReadableNumber(statsCache.missingCount)}
+              withPercentage={false}
+              isDefault={true}
             />
           </View>
-          <View style={{ marginTop: spacing.md }}>
-            <DownloadButton
-              iconSize={40}
-              text={`Export all ${selectedYear} reports`}
-              onClick={handleDownload}
-            />
+
+          {/* Status Filter */}
+          <View style={{ width: '100%' }}>
+            <ReportFilterNav activeFilter={selectedStatus} onFilterChange={handleStatusChange} />
           </View>
-        </View>
 
-        {/* Stats Section */}
-        <View style={{ gap: spacing.md }}>
-          <StatsCard
-            titleText="Flagged Reports"
-            statsText={formatReadableNumber(statsCache.flaggedCount)}
-            withPercentage={false}
-            isRed={true}
-          />
-          <StatsCard
-            titleText="Missing Reports"
-            statsText={formatReadableNumber(statsCache.missingCount)}
-            withPercentage={false}
-            isDefault={true}
-          />
-        </View>
-
-        {/* Status Filter */}
-        <View style={{ width: '100%' }}>
-          <ReportFilterNav activeFilter={selectedStatus} onFilterChange={handleStatusChange} />
-        </View>
-
-        {/* Reports Table */}
-        <View style={{ width: '100%' }}>
-          {loading ? (
-            <View style={{ height: 200, position: 'relative' }}>
-              <LoadingOverlay message="Loading reports..." />
-            </View>
-          ) : reportData.length === 0 ? (
-            <View>
-              <AEReportsTable reports={reportData} isAE={true} onOpenMonthlyReport={handleOpenMonthlyReport} />
-              <NoResultsText />
-            </View>
-          ) : (
-            <View style={{ gap: spacing.lg }}>
-              <AEReportsTable reports={reportData} isAE={true} onOpenMonthlyReport={handleOpenMonthlyReport} />
-              <View style={{ alignItems: 'center', width: '100%' }}>
-                <Pagination
-                  count={Math.max(1, Math.ceil(totalCount / rowsPerPage))}
-                  page={page}
-                  onChange={(value) => setPage(value)}
-                  rowsPerPage={rowsPerPage}
-                  onRowsPerPageChange={(newSize) => {
-                    setRowsPerPage(newSize);
-                    setPage(1);
-                  }}
-                />
+          {/* Reports Table */}
+          <View style={{ width: '100%' }}>
+            {loading ? (
+              <View style={{ height: 200, position: 'relative' }}>
+                <LoadingOverlay message="Loading reports..." />
               </View>
-            </View>
-          )}
+            ) : reportData.length === 0 ? (
+              <View>
+                <AEReportsTable reports={reportData} isAE={true} onOpenMonthlyReport={handleOpenMonthlyReport} />
+                <NoResultsText />
+              </View>
+            ) : (
+              <View style={{ gap: spacing.lg }}>
+                <AEReportsTable reports={reportData} isAE={true} onOpenMonthlyReport={handleOpenMonthlyReport} />
+                <View style={{ alignItems: 'center', width: '100%' }}>
+                  <Pagination
+                    count={Math.max(1, Math.ceil(totalCount / rowsPerPage))}
+                    page={page}
+                    onChange={(value) => setPage(value)}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={(newSize) => {
+                      setRowsPerPage(newSize);
+                      setPage(1);
+                    }}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Modals */}
       <ConfirmationModal
@@ -403,6 +428,14 @@ export default function ReportsManagement() {
         onClose={handleModalClose}
         refreshLogs={loadPaginatedReports}
       />
-    </ScrollView>
+
+      {/* Error Snackbar */}
+      <MainSnackbar
+        open={errorSnackbar.open}
+        message={errorSnackbar.message}
+        severity="error"
+        onClose={() => setErrorSnackbar({ open: false, message: '' })}
+      />
+    </>
   );
 }

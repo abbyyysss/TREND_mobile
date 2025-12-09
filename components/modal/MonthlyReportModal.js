@@ -27,7 +27,7 @@ import LoadingSnackbar from '../snackbar/LoadingSnackbar';
 import MainSnackbar from '../snackbar/MainSnackbar';
 
 export default function MonthlyReportModal({
-  open,
+ open,
   onClose,
   mode,
   rowData,
@@ -38,7 +38,7 @@ export default function MonthlyReportModal({
   setTotalCount,
   refreshLogs,
 }) {
-  const { colors, spacing, typography, radius, isDark } = useTheme();
+  const { colors, spacing, typography, radius, isDark, fonts } = useTheme();
   const { user, loading, role } = useAuth();
 
   const [openConfirmationModal, setOpenConfirmationModal] = useState(false);
@@ -68,15 +68,15 @@ export default function MonthlyReportModal({
   });
 
   const [guestCounts, setGuestCounts] = useState({
-    filipinoMale: 0,
-    filipinoFemale: 0,
-    filipinoTotal: 0,
-    foreignMale: 0,
-    foreignFemale: 0,
-    foreignTotal: 0,
-    ofwMale: 0,
-    ofwFemale: 0,
-    ofwTotal: 0,
+    filipinoMale: '0',
+    filipinoFemale: '0',
+    filipinoTotal: '0',
+    foreignMale: '0',
+    foreignFemale: '0',
+    foreignTotal: '0',
+    ofwMale: '0',
+    ofwFemale: '0',
+    ofwTotal: '0',
   });
 
   const [fieldModes, setFieldModes] = useState({
@@ -126,15 +126,15 @@ export default function MonthlyReportModal({
       });
 
       const updatedGuestCounts = {
-        filipinoMale: 0,
-        filipinoFemale: 0,
-        filipinoTotal: 0,
-        foreignMale: 0,
-        foreignFemale: 0,
-        foreignTotal: 0,
-        ofwMale: 0,
-        ofwFemale: 0,
-        ofwTotal: 0,
+        filipinoMale: '0',
+        filipinoFemale: '0',
+        filipinoTotal: '0',
+        foreignMale: '0',
+        foreignFemale: '0',
+        foreignTotal: '0',
+        ofwMale: '0',
+        ofwFemale: '0',
+        ofwTotal: '0',
       };
 
       const updatedFieldModes = {
@@ -151,50 +151,50 @@ export default function MonthlyReportModal({
 
         if (nationalityValue === 'Philippines') {
           if (nat.filipino_subcategory === 'Non-OFW') {
-            const maleCount = Number(nat.male_count) || 0;
-            const femaleCount = Number(nat.female_count) || 0;
+            const maleCount = String(Number(nat.male_count) || 0);
+            const femaleCount = String(Number(nat.female_count) || 0);
             updatedGuestCounts.filipinoMale = maleCount;
             updatedGuestCounts.filipinoFemale = femaleCount;
-            updatedGuestCounts.filipinoTotal = Number(nat.total) || 0;
+            updatedGuestCounts.filipinoTotal = String(Number(nat.total) || 0);
 
-            if (maleCount > 0 || femaleCount > 0) {
+            if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
               updatedFieldModes.filipino = 'disaggregated';
-            } else if (updatedGuestCounts.filipinoTotal > 0) {
+            } else if (Number(updatedGuestCounts.filipinoTotal) > 0) {
               updatedFieldModes.filipino = 'total';
             }
           } else if (nat.filipino_subcategory === 'OFW') {
-            const maleCount = Number(nat.male_count) || 0;
-            const femaleCount = Number(nat.female_count) || 0;
+            const maleCount = String(Number(nat.male_count) || 0);
+            const femaleCount = String(Number(nat.female_count) || 0);
             updatedGuestCounts.ofwMale = maleCount;
             updatedGuestCounts.ofwFemale = femaleCount;
-            updatedGuestCounts.ofwTotal = Number(nat.total) || 0;
+            updatedGuestCounts.ofwTotal = String(Number(nat.total) || 0);
 
-            if (maleCount > 0 || femaleCount > 0) {
+            if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
               updatedFieldModes.ofw = 'disaggregated';
-            } else if (updatedGuestCounts.ofwTotal > 0) {
+            } else if (Number(updatedGuestCounts.ofwTotal) > 0) {
               updatedFieldModes.ofw = 'total';
             }
           } else if (nat.filipino_subcategory === 'Foreigner') {
-            const maleCount = Number(nat.male_count) || 0;
-            const femaleCount = Number(nat.female_count) || 0;
+            const maleCount = String(Number(nat.male_count) || 0);
+            const femaleCount = String(Number(nat.female_count) || 0);
             updatedGuestCounts.foreignMale = maleCount;
             updatedGuestCounts.foreignFemale = femaleCount;
-            updatedGuestCounts.foreignTotal = Number(nat.total) || 0;
+            updatedGuestCounts.foreignTotal = String(Number(nat.total) || 0);
 
-            if (maleCount > 0 || femaleCount > 0) {
+            if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
               updatedFieldModes.foreign = 'disaggregated';
-            } else if (updatedGuestCounts.foreignTotal > 0) {
+            } else if (Number(updatedGuestCounts.foreignTotal) > 0) {
               updatedFieldModes.foreign = 'total';
             }
           }
         } else {
-          const maleCount = Number(nat.male_count) || 0;
-          const femaleCount = Number(nat.female_count) || 0;
-          const totalCount = Number(nat.total) || 0;
+          const maleCount = String(Number(nat.male_count) || 0);
+          const femaleCount = String(Number(nat.female_count) || 0);
+          const totalCount = String(Number(nat.total) || 0);
 
-          if (maleCount > 0 || femaleCount > 0) {
+          if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
             updatedNationalityFieldModes[nationalityValue] = 'disaggregated';
-          } else if (totalCount > 0) {
+          } else if (Number(totalCount) > 0) {
             updatedNationalityFieldModes[nationalityValue] = 'total';
           } else {
             updatedNationalityFieldModes[nationalityValue] = 'none';
@@ -216,9 +216,52 @@ export default function MonthlyReportModal({
       setNationalities(otherNationalities);
     } catch (error) {
       console.error('Error fetching report data:', error);
+      setErrorSnackbar({
+        open: true,
+        message: 'Failed to load report data. Please try again.',
+      });
     } finally {
       setIsFetchingReport(false);
     }
+  };
+
+  // Reset form function
+  const resetForm = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const formatted = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}-${String(firstDay.getDate()).padStart(2, '0')}`;
+
+    setFormData({
+      month: formatted,
+      ae_profile_id: null,
+      philippine_guests: '',
+      philippine_guest_nights: '',
+      foreign_guests: '',
+      foreign_guest_nights: '',
+      philippine_ofw_guests: '',
+      philippine_ofw_nights: '',
+      rooms_occupied: '',
+    });
+    setGuestCounts({
+      filipinoMale: '0',
+      filipinoFemale: '0',
+      filipinoTotal: '0',
+      foreignMale: '0',
+      foreignFemale: '0',
+      foreignTotal: '0',
+      ofwMale: '0',
+      ofwFemale: '0',
+      ofwTotal: '0',
+    });
+    setFieldModes({
+      filipino: 'none',
+      foreign: 'none',
+      ofw: 'none',
+    });
+    setNationalityFieldModes({});
+    setNationalities([]);
+    setSelectedNationality('');
+    setErrors({});
   };
 
   useEffect(() => {
@@ -227,15 +270,15 @@ export default function MonthlyReportModal({
         fetchReportData(rowData.id);
       } else if (mode === 'view' && rowData) {
         const updatedGuestCounts = {
-          filipinoMale: 0,
-          filipinoFemale: 0,
-          filipinoTotal: 0,
-          foreignMale: 0,
-          foreignFemale: 0,
-          foreignTotal: 0,
-          ofwMale: 0,
-          ofwFemale: 0,
-          ofwTotal: 0,
+          filipinoMale: '0',
+          filipinoFemale: '0',
+          filipinoTotal: '0',
+          foreignMale: '0',
+          foreignFemale: '0',
+          foreignTotal: '0',
+          ofwMale: '0',
+          ofwFemale: '0',
+          ofwTotal: '0',
         };
 
         const updatedFieldModes = {
@@ -252,50 +295,50 @@ export default function MonthlyReportModal({
 
           if (nationalityValue === 'Philippines') {
             if (nat.filipino_subcategory === 'Non-OFW') {
-              const maleCount = Number(nat.male_count) || 0;
-              const femaleCount = Number(nat.female_count) || 0;
+              const maleCount = String(Number(nat.male_count) || 0);
+              const femaleCount = String(Number(nat.female_count) || 0);
               updatedGuestCounts.filipinoMale = maleCount;
               updatedGuestCounts.filipinoFemale = femaleCount;
-              updatedGuestCounts.filipinoTotal = maleCount + femaleCount;
+              updatedGuestCounts.filipinoTotal = String(Number(maleCount) + Number(femaleCount));
 
-              if (maleCount > 0 || femaleCount > 0) {
+              if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
                 updatedFieldModes.filipino = 'disaggregated';
-              } else if (updatedGuestCounts.filipinoTotal > 0) {
+              } else if (Number(updatedGuestCounts.filipinoTotal) > 0) {
                 updatedFieldModes.filipino = 'total';
               }
             } else if (nat.filipino_subcategory === 'OFW') {
-              const maleCount = Number(nat.male_count) || 0;
-              const femaleCount = Number(nat.female_count) || 0;
+              const maleCount = String(Number(nat.male_count) || 0);
+              const femaleCount = String(Number(nat.female_count) || 0);
               updatedGuestCounts.ofwMale = maleCount;
               updatedGuestCounts.ofwFemale = femaleCount;
-              updatedGuestCounts.ofwTotal = maleCount + femaleCount;
+              updatedGuestCounts.ofwTotal = String(Number(maleCount) + Number(femaleCount));
 
-              if (maleCount > 0 || femaleCount > 0) {
+              if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
                 updatedFieldModes.ofw = 'disaggregated';
-              } else if (updatedGuestCounts.ofwTotal > 0) {
+              } else if (Number(updatedGuestCounts.ofwTotal) > 0) {
                 updatedFieldModes.ofw = 'total';
               }
             } else if (nat.filipino_subcategory === 'Foreigner') {
-              const maleCount = Number(nat.male_count) || 0;
-              const femaleCount = Number(nat.female_count) || 0;
+              const maleCount = String(Number(nat.male_count) || 0);
+              const femaleCount = String(Number(nat.female_count) || 0);
               updatedGuestCounts.foreignMale = maleCount;
               updatedGuestCounts.foreignFemale = femaleCount;
-              updatedGuestCounts.foreignTotal = maleCount + femaleCount;
+              updatedGuestCounts.foreignTotal = String(Number(maleCount) + Number(femaleCount));
 
-              if (maleCount > 0 || femaleCount > 0) {
+              if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
                 updatedFieldModes.foreign = 'disaggregated';
-              } else if (updatedGuestCounts.foreignTotal > 0) {
+              } else if (Number(updatedGuestCounts.foreignTotal) > 0) {
                 updatedFieldModes.foreign = 'total';
               }
             }
           } else {
-            const maleCount = Number(nat.male_count) || 0;
-            const femaleCount = Number(nat.female_count) || 0;
-            const totalCount = maleCount + femaleCount;
+            const maleCount = String(Number(nat.male_count) || 0);
+            const femaleCount = String(Number(nat.female_count) || 0);
+            const totalCount = String(Number(maleCount) + Number(femaleCount));
 
-            if (maleCount > 0 || femaleCount > 0) {
+            if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
               updatedNationalityFieldModes[nationalityValue] = 'disaggregated';
-            } else if (totalCount > 0) {
+            } else if (Number(totalCount) > 0) {
               updatedNationalityFieldModes[nationalityValue] = 'total';
             } else {
               updatedNationalityFieldModes[nationalityValue] = 'none';
@@ -316,86 +359,35 @@ export default function MonthlyReportModal({
         setNationalityFieldModes(updatedNationalityFieldModes);
         setNationalities(otherNationalities);
       } else {
-        setGuestCounts({
-          filipinoMale: 0,
-          filipinoFemale: 0,
-          filipinoTotal: 0,
-          foreignMale: 0,
-          foreignFemale: 0,
-          foreignTotal: 0,
-          ofwMale: 0,
-          ofwFemale: 0,
-          ofwTotal: 0,
-        });
-        setFieldModes({
-          filipino: 'none',
-          foreign: 'none',
-          ofw: 'none',
-        });
-        setNationalityFieldModes({});
-        setNationalities([]);
+        resetForm();
       }
     } else {
-      setFormData(() => {
-        const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        const formatted = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}-${String(firstDay.getDate()).padStart(2, '0')}`;
-
-        return {
-          month: formatted,
-          ae_profile_id: null,
-          philippine_guests: '',
-          philippine_guest_nights: '',
-          foreign_guests: '',
-          foreign_guest_nights: '',
-          philippine_ofw_guests: '',
-          philippine_ofw_nights: '',
-          rooms_occupied: '',
-        };
-      });
-      setGuestCounts({
-        filipinoMale: 0,
-        filipinoFemale: 0,
-        filipinoTotal: 0,
-        foreignMale: 0,
-        foreignFemale: 0,
-        foreignTotal: 0,
-        ofwMale: 0,
-        ofwFemale: 0,
-        ofwTotal: 0,
-      });
-      setFieldModes({
-        filipino: 'none',
-        foreign: 'none',
-        ofw: 'none',
-      });
-      setNationalityFieldModes({});
-      setNationalities([]);
-      setErrors({});
+      resetForm();
     }
-  }, [open, mode]);
+  }, [open, mode, rowData]);
 
+  // Auto-calculate total guests
   useEffect(() => {
     let total =
-      Number(guestCounts.filipinoTotal || 0) + 
-      Number(guestCounts.foreignTotal || 0) + 
-      Number(guestCounts.ofwTotal || 0);
+      Number(guestCounts.filipinoMale || 0) +
+      Number(guestCounts.filipinoFemale || 0) +
+      Number(guestCounts.foreignMale || 0) +
+      Number(guestCounts.foreignFemale || 0) +
+      Number(guestCounts.ofwMale || 0) +
+      Number(guestCounts.ofwFemale || 0);
 
     nationalities.forEach((n) => {
-      const totalCount = Number(n.total_count || 0);
-      const disaggregatedTotal = Number(n.male_count || 0) + Number(n.female_count || 0);
-      const nationalityTotal = totalCount > 0 ? totalCount : disaggregatedTotal;
-      total += nationalityTotal;
+      total += Number(n.male_count || 0) + Number(n.female_count || 0);
     });
 
     setTotalGuests(total);
   }, [guestCounts, nationalities]);
 
   const handleGuestCountChange = (field, type) => (value) => {
-    const numValue = Math.max(0, Number(value) || 0);
+    const safeValue = String(Math.max(0, Number(value) || 0));
 
     setGuestCounts((prev) => {
-      const updated = { ...prev, [field]: numValue };
+      const updated = { ...prev, [field]: safeValue };
       return updated;
     });
 
@@ -408,66 +400,75 @@ export default function MonthlyReportModal({
 
       if (type === 'disaggregated') {
         if (field.includes('filipino') && !field.includes('ofw')) {
-          const maleValue = field === 'filipinoMale' ? numValue : guestCounts.filipinoMale || 0;
-          const femaleValue = field === 'filipinoFemale' ? numValue : guestCounts.filipinoFemale || 0;
+          const maleValue = field === 'filipinoMale' ? safeValue : guestCounts.filipinoMale || '0';
+          const femaleValue = field === 'filipinoFemale' ? safeValue : guestCounts.filipinoFemale || '0';
 
-          if (maleValue === 0 && femaleValue === 0) {
+          if (Number(maleValue) === 0 && Number(femaleValue) === 0) {
             updated.filipino = 'none';
           } else {
             updated.filipino = 'disaggregated';
           }
 
-          setGuestCounts((curr) => ({ ...curr, filipinoTotal: maleValue + femaleValue }));
+          setGuestCounts((curr) => ({ 
+            ...curr, 
+            filipinoTotal: String(Number(maleValue) + Number(femaleValue)) 
+          }));
         }
         if (field.includes('foreign')) {
-          const maleValue = field === 'foreignMale' ? numValue : guestCounts.foreignMale || 0;
-          const femaleValue = field === 'foreignFemale' ? numValue : guestCounts.foreignFemale || 0;
+          const maleValue = field === 'foreignMale' ? safeValue : guestCounts.foreignMale || '0';
+          const femaleValue = field === 'foreignFemale' ? safeValue : guestCounts.foreignFemale || '0';
 
-          if (maleValue === 0 && femaleValue === 0) {
+          if (Number(maleValue) === 0 && Number(femaleValue) === 0) {
             updated.foreign = 'none';
           } else {
             updated.foreign = 'disaggregated';
           }
 
-          setGuestCounts((curr) => ({ ...curr, foreignTotal: maleValue + femaleValue }));
+          setGuestCounts((curr) => ({ 
+            ...curr, 
+            foreignTotal: String(Number(maleValue) + Number(femaleValue)) 
+          }));
         }
         if (field.includes('ofw')) {
-          const maleValue = field === 'ofwMale' ? numValue : guestCounts.ofwMale || 0;
-          const femaleValue = field === 'ofwFemale' ? numValue : guestCounts.ofwFemale || 0;
+          const maleValue = field === 'ofwMale' ? safeValue : guestCounts.ofwMale || '0';
+          const femaleValue = field === 'ofwFemale' ? safeValue : guestCounts.ofwFemale || '0';
 
-          if (maleValue === 0 && femaleValue === 0) {
+          if (Number(maleValue) === 0 && Number(femaleValue) === 0) {
             updated.ofw = 'none';
           } else {
             updated.ofw = 'disaggregated';
           }
 
-          setGuestCounts((curr) => ({ ...curr, ofwTotal: maleValue + femaleValue }));
+          setGuestCounts((curr) => ({ 
+            ...curr, 
+            ofwTotal: String(Number(maleValue) + Number(femaleValue)) 
+          }));
         }
       }
 
       if (type === 'total') {
         if (field === 'filipinoTotal') {
-          if (numValue === 0) {
+          if (Number(safeValue) === 0) {
             updated.filipino = 'none';
           } else {
             updated.filipino = 'total';
-            setGuestCounts((curr) => ({ ...curr, filipinoMale: 0, filipinoFemale: 0 }));
+            setGuestCounts((curr) => ({ ...curr, filipinoMale: '0', filipinoFemale: '0' }));
           }
         }
         if (field === 'foreignTotal') {
-          if (numValue === 0) {
+          if (Number(safeValue) === 0) {
             updated.foreign = 'none';
           } else {
             updated.foreign = 'total';
-            setGuestCounts((curr) => ({ ...curr, foreignMale: 0, foreignFemale: 0 }));
+            setGuestCounts((curr) => ({ ...curr, foreignMale: '0', foreignFemale: '0' }));
           }
         }
         if (field === 'ofwTotal') {
-          if (numValue === 0) {
+          if (Number(safeValue) === 0) {
             updated.ofw = 'none';
           } else {
             updated.ofw = 'total';
-            setGuestCounts((curr) => ({ ...curr, ofwMale: 0, ofwFemale: 0 }));
+            setGuestCounts((curr) => ({ ...curr, ofwMale: '0', ofwFemale: '0' }));
           }
         }
       }
@@ -485,6 +486,10 @@ export default function MonthlyReportModal({
           setNationalityOptions(nationalitiesData.map((n) => n.country));
         } catch (error) {
           console.error('Error loading data:', error);
+          setErrorSnackbar({
+            open: true,
+            message: 'Failed to load form data. Please try again.',
+          });
         } finally {
           setIsLoadingData(false);
         }
@@ -497,7 +502,15 @@ export default function MonthlyReportModal({
   const handleAddNationality = (nation) => {
     if (!nation) return;
     if (!nationalities.find((n) => n.nationality === nation)) {
-      setNationalities([...nationalities, { nationality: nation, male_count: 0, female_count: 0, total_count: 0 }]);
+      setNationalities([
+        ...nationalities, 
+        { 
+          nationality: nation, 
+          male_count: '0', 
+          female_count: '0', 
+          total_count: '0' 
+        }
+      ]);
       setNationalityFieldModes((prev) => ({ ...prev, [nation]: 'none' }));
     }
     setSelectedNationality('');
@@ -513,10 +526,10 @@ export default function MonthlyReportModal({
   };
 
   const updateNationalityCount = (nationality, field, value) => {
-    const numValue = Math.max(0, Number(value) || 0);
+    const safeValue = String(Math.max(0, Number(value) || 0));
 
     setNationalities((prev) => 
-      prev.map((n) => (n.nationality === nationality ? { ...n, [field]: numValue } : n))
+      prev.map((n) => (n.nationality === nationality ? { ...n, [field]: safeValue } : n))
     );
 
     setNationalityFieldModes((prev) => {
@@ -524,24 +537,25 @@ export default function MonthlyReportModal({
       const currentNationality = nationalities.find((n) => n.nationality === nationality);
 
       if (field === 'total_count') {
-        if (numValue === 0) {
+        if (Number(safeValue) === 0) {
           updated[nationality] = 'none';
         } else {
           updated[nationality] = 'total';
           setNationalities((curr) =>
-            curr.map((n) => (n.nationality === nationality ? { ...n, male_count: 0, female_count: 0 } : n)),
+            curr.map((n) => (n.nationality === nationality ? { ...n, male_count: '0', female_count: '0' } : n)),
           );
         }
       } else if (field === 'male_count' || field === 'female_count') {
         const otherField = field === 'male_count' ? 'female_count' : 'male_count';
-        const otherValue =
-          field === 'male_count' ? currentNationality?.female_count || 0 : currentNationality?.male_count || 0;
+        const otherValue = field === 'male_count' 
+          ? currentNationality?.female_count || '0' 
+          : currentNationality?.male_count || '0';
 
-        if (numValue === 0 && otherValue === 0) {
+        if (Number(safeValue) === 0 && Number(otherValue) === 0) {
           updated[nationality] = 'none';
         } else {
           updated[nationality] = 'disaggregated';
-          const totalValue = field === 'male_count' ? numValue + otherValue : otherValue + numValue;
+          const totalValue = String(Number(safeValue) + Number(otherValue));
           setNationalities((curr) =>
             curr.map((n) => (n.nationality === nationality ? { ...n, total_count: totalValue } : n)),
           );
@@ -551,7 +565,7 @@ export default function MonthlyReportModal({
       return updated;
     });
   };
-
+    
   const validate = () => {
     const newErrors = {};
     if (!formData.philippine_guests) newErrors.philippine_guests = 'This field is required';
@@ -565,16 +579,20 @@ export default function MonthlyReportModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const confirmAction = async () => {
+  const handleSave = () => {
     if (!validate()) return;
-    
+    setOpenConfirmationModal(true);
+  };
+
+  const confirmAction = async () => {
     setIsSubmitting(true);
     try {
       const u = user?.user_profile;
       const reportMode = role === 'AE' ? u?.report_mode : 'monthly';
 
       const nationalitiesData = [];
-      if (guestCounts.filipinoTotal > 0) {
+      
+      if (Number(guestCounts.filipinoTotal) > 0) {
         nationalitiesData.push({
           nationality: 'Philippines',
           filipino_subcategory: 'Non-OFW',
@@ -583,7 +601,8 @@ export default function MonthlyReportModal({
           total_count: Number(guestCounts.filipinoTotal) || 0,
         });
       }
-      if (guestCounts.ofwTotal > 0) {
+      
+      if (Number(guestCounts.ofwTotal) > 0) {
         nationalitiesData.push({
           nationality: 'Philippines',
           filipino_subcategory: 'OFW',
@@ -592,7 +611,8 @@ export default function MonthlyReportModal({
           total_count: Number(guestCounts.ofwTotal) || 0,
         });
       }
-      if (guestCounts.foreignTotal > 0) {
+      
+      if (Number(guestCounts.foreignTotal) > 0) {
         nationalitiesData.push({
           nationality: 'Philippines',
           filipino_subcategory: 'Foreigner',
@@ -601,14 +621,15 @@ export default function MonthlyReportModal({
           total_count: Number(guestCounts.foreignTotal) || 0,
         });
       }
+      
       nationalities.forEach((nat) => {
-        const totalCount = nat.total_count || (nat.male_count + nat.female_count);
+        const totalCount = Number(nat.total_count) || (Number(nat.male_count) + Number(nat.female_count));
         if (totalCount > 0) {
           nationalitiesData.push({
             nationality: nat.nationality,
             filipino_subcategory: null,
-            male_count: nat.male_count,
-            female_count: nat.female_count,
+            male_count: Number(nat.male_count),
+            female_count: Number(nat.female_count),
             total_count: totalCount,
           });
         }
@@ -640,6 +661,12 @@ export default function MonthlyReportModal({
       setOpenConfirmationModal(false);
     }
   };
+
+  const handleCancel = () => {
+    resetForm();
+    onClose();
+  };
+
 
   return (
     <>
@@ -680,6 +707,7 @@ export default function MonthlyReportModal({
                 <MainTextInput
                   label="Total no. of domestic guest check-ins"
                   type="number"
+                  variant = "outlined"
                   size="small"
                   shrink
                   value={formData.philippine_guests}
@@ -692,6 +720,7 @@ export default function MonthlyReportModal({
                 <MainTextInput
                   label="Total no. of domestic guest nights"
                   type="number"
+                  variant = "outlined"
                   size="small"
                   shrink
                   value={formData.philippine_guest_nights}
@@ -703,6 +732,7 @@ export default function MonthlyReportModal({
 
                 <MainTextInput
                   label="Total no. of foreign guest check-ins"
+                  variant = "outlined"
                   type="number"
                   size="small"
                   shrink
@@ -715,6 +745,7 @@ export default function MonthlyReportModal({
 
                 <MainTextInput
                   label="Total no. of foreign guest nights"
+                  variant = "outlined"
                   type="number"
                   size="small"
                   shrink
@@ -727,6 +758,7 @@ export default function MonthlyReportModal({
 
                 <MainTextInput
                   label="Total no. of ofw guest check-ins"
+                  variant = "outlined"
                   type="number"
                   size="small"
                   shrink
@@ -739,6 +771,7 @@ export default function MonthlyReportModal({
 
                 <MainTextInput
                   label="Total no. of ofw guest nights"
+                  variant = "outlined"
                   type="number"
                   size="small"
                   shrink
@@ -752,6 +785,7 @@ export default function MonthlyReportModal({
                 <MainTextInput
                   label="Total no. of rooms occupied"
                   type="number"
+                  variant = "outlined"
                   size="small"
                   shrink
                   value={formData.rooms_occupied}
@@ -765,6 +799,7 @@ export default function MonthlyReportModal({
                   fontSize: typography.fontSize.xl, 
                   color: colors.text,
                   fontWeight: typography.weight.semibold,
+                  fontFamily: fonts.gotham,
                   marginTop: spacing.lg,
                   marginBottom: spacing.md 
                 }}>
@@ -775,8 +810,8 @@ export default function MonthlyReportModal({
 
                 {/* Filipino Nationality Section */}
                 <View style={{ marginBottom: spacing.lg }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
-                    <Text style={{ color: colors.text, fontSize: typography.fontSize.md }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm, marginTop: spacing.md }}>
+                    <Text style={{ color: colors.text, fontSize: typography.fontSize.md, fontFamily: fonts.gotham, }}>
                       Filipino Nationality
                     </Text>
                   </View>
@@ -828,11 +863,11 @@ export default function MonthlyReportModal({
                 {/* Foreign Nationality Section */}
                 <View style={{ marginBottom: spacing.lg }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
-                    <Text style={{ color: colors.text, fontSize: typography.fontSize.md }}>
+                    <Text style={{ color: colors.text, fontSize: typography.fontSize.md, fontFamily: fonts.gotham, }}>
                       Foreign Nationality
                     </Text>
                     <InformationButton
-                      iconSize="text-[20px]"
+                      iconSize={20}
                       helperText="A foreign national who has been granted legal permission to reside permanently or indefinitely in the Philippines."
                     />
                   </View>
@@ -885,7 +920,7 @@ export default function MonthlyReportModal({
 
                 {/* OFW Section */}
                 <View style={{ marginBottom: spacing.lg }}>
-                  <Text style={{ color: colors.text, fontSize: typography.fontSize.md, marginBottom: spacing.sm }}>
+                  <Text style={{ color: colors.text, fontSize: typography.fontSize.md, marginBottom: spacing.sm, marginTop: spacing.md, fontFamily: fonts.gotham, }}>
                     Overseas Filipino Workers
                   </Text>
                   
@@ -933,16 +968,17 @@ export default function MonthlyReportModal({
                   />
                 </View>
 
+                
                 <FullUnderlineTitle text="Non-Philippine Residents" />
-
+                
                 {/* Other Nationalities */}
                 {nationalities.map((nation) => {
                   const fieldMode = nationalityFieldModes[nation.nationality] || 'none';
 
                   return (
                     <View key={nation.nationality} style={{ marginBottom: spacing.lg }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
-                        <Text style={{ color: colors.text, fontSize: typography.fontSize.md, flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm, marginTop: spacing.md }}>
+                        <Text style={{ color: colors.text, fontSize: typography.fontSize.md, flex: 1 , fontFamily: fonts.gotham,}}>
                           {nation.nationality}
                         </Text>
                         {!isViewMode && (
@@ -958,6 +994,7 @@ export default function MonthlyReportModal({
                             disabled={fieldMode === 'total' || mode === 'view'}
                             label="Male"
                             type="number"
+                            variant="outlined"
                             size="small"
                             shrink={true}
                             value={nation.male_count}
@@ -969,6 +1006,7 @@ export default function MonthlyReportModal({
                             disabled={fieldMode === 'total' || mode === 'view'}
                             label="Female"
                             type="number"
+                            variant="outlined"
                             size="small"
                             shrink={true}
                             value={nation.female_count}
@@ -1000,49 +1038,53 @@ export default function MonthlyReportModal({
                   <MainSelectInput
                     label="+ Add Nationality"
                     size="small"
-                    value={selectedNationality || ''}
-                    placeholder="Select nationality"
-                    clearTextOnSelect
+                    variant="outlined"
+                    value={selectedNationality}
+                    onChange={(value) => {
+                      handleAddNationality(value);
+                      setSelectedNationality('');
+                    }}
                     options={nationalityOptions
                       .filter((opt) => !nationalities.find((n) => n.nationality === opt))
                       .map((opt) => ({ value: opt, label: opt }))}
-                    onChange={(val) => handleAddNationality(val)}
+                     placeholder="Select nationality"
                   />
                 )}
 
                 <MainTextInput 
                   label="Total Guests" 
+                  variant="outlined"
+                  shrink
                   disabled 
                   type="number" 
                   size="small"
                   value={totalGuests} 
                 />
 
-                {isViewMode ? (
-                  <View style={{ alignItems: 'center', marginTop: spacing.lg, marginBottom: spacing.xl }}>
-                    <DefaultButton 
-                      classProps="text-[14px] py-[5px] px-[10px]"
-                      label="Close" 
-                      onClick={onClose} 
-                    />
+                {/* Action Buttons */}
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    gap: spacing.md,  
+                    marginBottom: spacing.xl 
+                  }}>
+                    {!isViewMode && (
+                      <View style={{ flex: 1 }}>
+                        <DefaultButton
+                          label={isSubmitting ? <LoadingText text="Submitting..." /> : 'Submit'}
+                          onPress={() => setOpenConfirmationModal(true)}
+                          disabled={isSubmitting}
+                        />
+                      </View>
+                    )}
+                    <View style={{ flex: 1 }}>
+                      <DefaultButton
+                        label={isViewMode ? 'Close' : 'Cancel'}
+                        onPress={onClose}
+                        isRed={!isViewMode}
+                        disabled={isSubmitting && !isViewMode}
+                      />
+                    </View>
                   </View>
-                ) : (
-                  <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md, marginTop: spacing.lg, marginBottom: spacing.xl }}>
-                    <DefaultButton
-                      classProps="text-[14px] py-[5px] px-[10px]"
-                      label={isSubmitting ? <LoadingText text="Submitting..." /> : 'Submit'}
-                      onClick={() => setOpenConfirmationModal(true)}
-                      disabled={isSubmitting}
-                    />
-                    <DefaultButton
-                      classProps="text-[14px] py-[5px] px-[10px]"
-                      label="Cancel"
-                      isRed
-                      onClick={onClose}
-                      disabled={isSubmitting}
-                    />
-                  </View>
-                )}
               </ScrollView>
             )}
           </View>

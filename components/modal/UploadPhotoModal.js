@@ -173,7 +173,7 @@ export default function UploadPhotoModal({ open, onClose, label, description }) 
                 <View style={styles.uploadButtonContainer}>
                   <UploadButton
                     label="Click to upload or drag and drop."
-                    onClick={handleClickUploadArea}
+                    onPress={handleClickUploadArea}
                     isPhoto={true}
                     withHelperText={true}
                     styles={{

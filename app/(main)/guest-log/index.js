@@ -327,8 +327,8 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     width: '100%',
-    paddingVertical: 30,
-    paddingHorizontal: 25,
+    paddingVertical: 15,
+    paddingHorizontal: -5,
   },
   dateInputWrapper: {
     flexDirection: 'row',

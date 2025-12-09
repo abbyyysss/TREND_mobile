@@ -33,7 +33,7 @@ export default function ProfileButton() {
     return (
       <View style={styles.profileContainer}>
         <ActivityIndicator size="small" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+        <Text style={[styles.loadingText, { color: colors.textSecondary, fontFamily: fonts.gotham }]}>
           Loading...
         </Text>
       </View>
@@ -145,14 +145,14 @@ export default function ProfileButton() {
               ]}>
                 <Ionicons
                   name="person-outline"
-                  size={14}
+                  size={11}
                   color={isProfileActive ? '#000000' : colors.text}
                 />
               </View>
               <Text
                 style={[
                   styles.menuText,
-                  { color: isProfileActive ? '#000000' : colors.text },
+                  { color: isProfileActive ? '#000000' : colors.text , fontFamily: fonts.gotham },
                   isProfileActive && styles.menuTextActive,
                 ]}
               >
@@ -167,11 +167,11 @@ export default function ProfileButton() {
             >
               <Ionicons
                 name="log-out-outline"
-                size={18}
+                size={22}
                 color={colors.text}
                 style={styles.menuIcon}
               />
-              <Text style={[styles.menuText, { color: colors.text }]}>
+              <Text style={[styles.menuText, { color: colors.text, fontFamily: fonts.gotham }]}>
                 Logout
               </Text>
             </TouchableOpacity>

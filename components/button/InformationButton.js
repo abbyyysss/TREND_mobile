@@ -4,10 +4,10 @@ import {
   Text,
   View,
   StyleSheet,
-  useColorScheme,
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function InfoButton({ 
   iconSize = 20, 
@@ -16,9 +16,7 @@ export default function InfoButton({
 }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const iconColor = isDark ? '#d2d2d2' : '#1e1e1e';
+  const { colors, fonts, isDark, typography, radius, spacing } = useTheme();
 
   useEffect(() => {
     let timer;
@@ -42,7 +40,7 @@ export default function InfoButton({
     }
 
     return () => clearTimeout(timer);
-  }, [showTooltip]);
+  }, [showTooltip, fadeAnim, autoHideDuration]);
 
   const toggleTooltip = () => {
     if (!showTooltip) {
@@ -57,17 +55,19 @@ export default function InfoButton({
     }
   };
 
+  const tooltipBg = isDark ? 'rgba(63, 63, 63, 0.95)' : 'rgba(45, 45, 45, 0.92)';
+
   return (
     <View style={styles.wrapper}>
       <TouchableOpacity
         onPress={toggleTooltip}
-        style={styles.iconButton}
+        style={[styles.iconButton, { padding: spacing.xs }]}
         activeOpacity={0.6}
       >
         <Ionicons 
           name="information-circle" 
           size={iconSize} 
-          color={iconColor} 
+          color={colors.textSecondary} 
         />
       </TouchableOpacity>
 
@@ -75,17 +75,35 @@ export default function InfoButton({
         <Animated.View 
           style={[styles.tooltipContainer, { opacity: fadeAnim }]}
         >
-          <View style={styles.tooltipBox}>
-            <Text style={styles.tooltipText}>{helperText}</Text>
+          <View style={[
+            styles.tooltipBox, 
+            { 
+              backgroundColor: tooltipBg,
+              borderRadius: radius.sm,
+              paddingVertical: spacing.xs,
+              paddingHorizontal: spacing.sm + 2,
+            }
+          ]}>
+            <Text style={[
+              styles.tooltipText,
+              {
+                fontFamily: fonts.gotham,
+                fontSize: typography.fontSize.xs,
+                color: '#FFFFFF',
+              }
+            ]}>
+              {helperText}
+            </Text>
           </View>
-          <View style={styles.tooltipArrow} />
+          <View style={[
+            styles.tooltipArrow,
+            { borderTopColor: tooltipBg }
+          ]} />
         </Animated.View>
       )}
     </View>
   );
 }
-
-const TOOLTIP_BG = 'rgba(63, 63, 63, 0.92)';
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -94,7 +112,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconButton: {
-    padding: 4,
+    // padding applied dynamically
   },
   tooltipContainer: {
     position: 'absolute',
@@ -104,18 +122,16 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   tooltipBox: {
-    backgroundColor: TOOLTIP_BG,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
     maxWidth: 300, 
     minWidth: 240,
     elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
     flexShrink: 1, 
   },
   tooltipText: {
-    color: '#fff',
-    fontSize: 12,
     textAlign: 'center',
     flexWrap: 'wrap', 
     flexShrink: 1,
@@ -128,7 +144,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 7,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: TOOLTIP_BG, 
     marginTop: -1, 
   },
 });
