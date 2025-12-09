@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import ProfileButton from '@/components/button/ProfileButton';
 import NavIcon from '@/components/icon/NavIcon';
 import { useTheme } from '@/assets/theme/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { AEReportMode } from '@/services/Constants';
 
 const navItems = [
   { 
@@ -38,11 +40,29 @@ export default function MainDrawer() {
   const pathname = usePathname();
   const router = useRouter();
   const { colors, isDark, fonts } = useTheme();
+  const { user, loading, role } = useAuth();
 
   const handleNavigate = (href) => {
     setDrawerOpen(false);
     router.push(href);
   };
+
+  if (loading || !user) return null;
+
+  // Get user profile
+  const u = user?.user_profile;
+
+  // For AE role, get the report mode
+  const reportMode = role === 'AE' ? u?.report_mode : null;
+
+  // Filter navigation items based on report mode
+  const visibleItems = navItems.filter(item => {
+    // If AE is MONTHLY, exclude Guest Log
+    if (reportMode === AEReportMode.MONTHLY && item.href === '/guest-log') {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <>
@@ -109,7 +129,7 @@ export default function MainDrawer() {
               style={styles.navList}
               showsVerticalScrollIndicator={false}
             >
-              {navItems.map((item) => {
+              {visibleItems.map((item) => {
                 const isActive = pathname?.startsWith(item.href);
                 return (
                   <TouchableOpacity
@@ -204,7 +224,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   navItemActive: {
-    backgroundColor: '#D4AF37', // Gold/yellow color
+    backgroundColor: '#D4AF37',
   },
   navIcon: {
     width: 30,

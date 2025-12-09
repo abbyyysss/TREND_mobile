@@ -159,7 +159,6 @@ export default function DefaultButton({
                 {
                   color: buttonColors.textColor,
                   textTransform: uppercase ? 'uppercase' : 'none',
-                  fontSize: typography.fontSize.md,
                   fontWeight: typography.weight.medium,
                   fontFamily: fonts.gotham,
                 },

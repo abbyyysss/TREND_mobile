@@ -1,138 +1,97 @@
-import React from 'react';
-import { View, Text, StyleSheet, useColorScheme, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
+import { useTheme } from '@/assets/theme/ThemeContext';
+import { format } from 'date-fns';
 import { formatCompactNumber, formatReadableNumber } from '@/utils/numberFormatter';
-
-const formatMonth = (dateString) => {
-  const date = new Date(dateString);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return months[date.getMonth()];
-};
 
 export default function OccupancyRateChart({
   data = [],
   title = 'Occupancy Rate Comparison',
   yLabel = 'Occupancy Rate (%)',
+  isAnimationActive = false,
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  
+  const { colors, isDark, spacing, typography } = useTheme();
+  const [selectedBar, setSelectedBar] = useState(null);
+
+  const chartData = data.map((item, index) => ({
+    month: format(new Date(item.month), 'MMM'),
+    ae: item.ae_occupancy ?? 0,
+    city: item.city_occupancy ?? 0,
+    index,
+  }));
+
   const textColor = isDark ? '#CACDD6' : '#828898';
-  const backgroundColor = isDark ? '#1a1a1a' : '#ffffff';
+  const gridColor = isDark ? '#CACDD680' : '#82889880';
 
   // Prepare grouped bar data
-  const barData = data.flatMap((item, index) => {
-    const month = formatMonth(item.month);
-    return [
-      {
-        value: item.ae_occupancy ?? 0,
-        label: index === 0 ? month : '', // Only show label on first bar
-        spacing: 2,
-        labelWidth: 40,
-        labelTextStyle: { color: textColor, fontSize: 10 },
-        frontColor: '#8979FF',
-        topLabelComponent: () => (
-          <Text style={{ fontSize: 9, color: textColor, marginBottom: 2 }}>
-            {(item.ae_occupancy ?? 0).toFixed(1)}%
-          </Text>
-        ),
-      },
-      {
-        value: item.city_occupancy ?? 0,
-        spacing: index === data.length - 1 ? 2 : 20, // Extra spacing after each group
-        frontColor: '#FF928A',
-        topLabelComponent: () => (
-          <Text style={{ fontSize: 9, color: textColor, marginBottom: 2 }}>
-            {(item.city_occupancy ?? 0).toFixed(1)}%
-          </Text>
-        ),
-      },
-    ];
+  const barData = chartData.map((item) => ({
+    value: item.ae,
+    frontColor: '#8979FF',
+    label: item.month,
+    spacing: 2,
+    onPress: () => setSelectedBar(item),
+  }));
+
+  const barData2 = chartData.map((item) => ({
+    value: item.city,
+    frontColor: '#FF928A',
+  }));
+
+  // Interleave the two datasets for side-by-side bars
+  const combinedData = [];
+  barData.forEach((item, i) => {
+    combinedData.push(item);
+    combinedData.push({ ...barData2[i], label: '' });
   });
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
-      <Text style={[styles.title, { color: isDark ? '#E5E7EB' : '#313638' }]}>
-        {title}
-      </Text>
+    <View style={[styles.container, { backgroundColor: colors.card }]}>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
 
-      <View style={styles.chartWrapper}>
+      {selectedBar && (
+        <View style={[styles.tooltip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.tooltipLabel, { color: colors.text }]}>
+            {selectedBar.month}
+          </Text>
+          <Text style={[styles.tooltipValue, { color: '#8979FF' }]}>
+            Your establishment: {formatReadableNumber(selectedBar.ae)}
+          </Text>
+          <Text style={[styles.tooltipValue, { color: '#FF928A' }]}>
+            City average: {formatReadableNumber(selectedBar.city)}
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.chartRow}>
         {yLabel && (
-          <View style={styles.yAxisLabel}>
-            <Text style={[styles.yAxisText, { color: textColor }]}>
-              {yLabel}
-            </Text>
+          <View style={styles.yLabelContainer}>
+            <Text style={[styles.yLabel, { color: textColor }]}>{yLabel}</Text>
           </View>
         )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-          <View style={styles.chartContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollView}>
+          <View style={styles.chartWrapper}>
             <BarChart
-              data={barData}
-              height={220}
-              width={Math.max(data.length * 70, 300)}
+              data={combinedData}
+              height={250}
+              width={Math.max(chartData.length * 70, 350)}
               barWidth={22}
-              spacing={8}
-              initialSpacing={20}
-              endSpacing={20}
               noOfSections={4}
-              maxValue={100}
-              yAxisColor={textColor}
-              xAxisColor={textColor}
               yAxisTextStyle={{ color: textColor, fontSize: 11 }}
-              rulesColor={isDark ? 'rgba(202, 205, 214, 0.2)' : 'rgba(130, 136, 152, 0.2)'}
-              rulesType="solid"
-              formatYLabel={formatCompactNumber}
-              showValuesAsTopLabel={false}
-              // Enable press interaction
-              showStripOnPress
-              stripColor={isDark ? '#ffffff20' : '#00000020'}
-              stripWidth={1}
-              stripOpacity={0.3}
-              renderTooltip={(item, index) => {
-                const monthIndex = Math.floor(index / 2);
-                const isAE = index % 2 === 0;
-                const monthData = data[monthIndex];
-                
-                if (!monthData) return null;
-                
-                return (
-                  <View
-                    style={{
-                      backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-                      borderRadius: 8,
-                      padding: 10,
-                      borderWidth: 1,
-                      borderColor: isDark ? '#CACDD680' : '#82889880',
-                      minWidth: 140,
-                      marginBottom: 10,
-                      marginLeft: -50,
-                    }}
-                  >
-                    <Text style={{ color: textColor, fontSize: 11, fontWeight: '600', marginBottom: 6 }}>
-                      {formatMonth(monthData.month)}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#8979FF', marginRight: 6 }} />
-                      <Text style={{ color: textColor, fontSize: 10 }}>
-                        Your establishment: {(monthData.ae_occupancy ?? 0).toFixed(1)}%
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#FF928A', marginRight: 6 }} />
-                      <Text style={{ color: textColor, fontSize: 10 }}>
-                        City average: {(monthData.city_occupancy ?? 0).toFixed(1)}%
-                      </Text>
-                    </View>
-                  </View>
-                );
-              }}
+              xAxisLabelTextStyle={{ color: textColor, fontSize: 11 }}
+              rulesColor={gridColor}
+              yAxisColor={gridColor}
+              xAxisColor={gridColor}
+              formatYLabel={(value) => formatCompactNumber(parseFloat(value))}
+              hideOrigin
+              spacing={16}
+              isAnimated={isAnimationActive}
             />
           </View>
         </ScrollView>
       </View>
 
-      {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#8979FF' }]} />
@@ -142,9 +101,7 @@ export default function OccupancyRateChart({
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#FF928A' }]} />
-          <Text style={[styles.legendText, { color: textColor }]}>
-            City's avg
-          </Text>
+          <Text style={[styles.legendText, { color: textColor }]}>City's avg</Text>
         </View>
       </View>
     </View>
@@ -153,52 +110,76 @@ export default function OccupancyRateChart({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 20,
     borderRadius: 8,
+    marginVertical: 10,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 16,
   },
-  chartWrapper: {
+  chartRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  yAxisLabel: {
+  yLabelContainer: {
     width: 20,
-    height: 220,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 8,
   },
-  yAxisText: {
+  yLabel: {
     fontSize: 12,
     transform: [{ rotate: '-90deg' }],
-    width: 220,
+    width: 200,
     textAlign: 'center',
   },
-  chartContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  chartWrapper: {
     paddingVertical: 10,
   },
   legend: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
     flexWrap: 'wrap',
+    marginTop: 16,
+    gap: 16,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 12,
-    marginVertical: 4,
+    marginHorizontal: 8,
   },
   legendDot: {
     width: 12,
     height: 12,
-    borderRadius: 2,
+    borderRadius: 6,
     marginRight: 6,
   },
   legendText: {
     fontSize: 12,
+  },
+  tooltip: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  tooltipLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  tooltipValue: {
+    fontSize: 12,
+    marginVertical: 2,
+  },
+  barLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginBottom: 2,
   },
 });

@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Linking, ActivityIndicator } from '
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/assets/theme/ThemeContext';
-import { AEReportMode, BASE_URL } from '@/services/Constants';
+import { AEReportMode, BASE_URL, FILE_URL } from '@/services/Constants';
 import { useProfileRoute } from '@/context/ProfileRouteContext';
 import EditIconButton from '@/components/button/EditIconButton';
 import { extractFileInfo } from '@/utils/extractFileInfo';
@@ -53,7 +53,7 @@ export default function ProfileOverview() {
       const newAttachments = {};
       for (const { key, stateKey } of attachmentKeys) {
         newAttachments[stateKey] = await extractFileInfo(
-          profile?.[key] ? `${BASE_URL}${profile[key]}` : null
+          profile?.[key] ? `${FILE_URL}${profile[key]}` : null
         );
       }
       setAttachments(newAttachments);
@@ -66,7 +66,7 @@ export default function ProfileOverview() {
 
   const handleViewFile = (url) => {
     if (url) {
-      const fullUrl = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+      const fullUrl = url.startsWith('http') ? url : `${FILE_URL}${url}`;
       Linking.openURL(fullUrl);
     }
   };

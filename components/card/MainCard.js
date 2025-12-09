@@ -59,9 +59,7 @@ const mainStyles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: '#fff',
   },
-  containerDark: {
-    backgroundColor: '#1a1a1a',
-  },
+  
   scrollContent: {
     flexGrow: 1,
   },

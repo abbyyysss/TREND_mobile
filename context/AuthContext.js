@@ -201,13 +201,6 @@ export const AuthProvider = ({ children }) => {
         
         const userData = await getCurrentUser();
         
-        // 🔍 DEBUG LOG - Remove after testing
-        console.log('🔍 Auth Init - User Data Structure:');
-        console.log('  id:', userData?.user_profile?.user?.id);
-        console.log('  role:', userData?.user_profile?.user?.role);
-        console.log('  email:', userData?.user_profile?.user?.email);
-        console.log('  report_mode:', userData?.user_profile?.report_mode);
-        
         setUser(userData); // Store raw data - useMemo handles extraction
         setIsAuthenticated(true);
       } catch (e) {
@@ -253,15 +246,6 @@ export const AuthProvider = ({ children }) => {
     
     try {
       const userData = await getCurrentUser();
-      
-      // 🔍 DEBUG LOG - Remove after testing
-      console.log('🔍 Login - User Data Structure:');
-      console.log('  id:', userData?.user_profile?.user?.id);
-      console.log('  role:', userData?.user_profile?.user?.role);
-      console.log('  email:', userData?.user_profile?.user?.email);
-      console.log('  username:', userData?.user_profile?.user?.username);
-      console.log('  user_profile.id:', userData?.user_profile?.id);
-      console.log('  user_profile.report_mode:', userData?.user_profile?.report_mode);
       
       setUser(userData); // Store raw data - useMemo handles extraction
       setIsAuthenticated(true);

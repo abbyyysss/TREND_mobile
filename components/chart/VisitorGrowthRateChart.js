@@ -1,204 +1,257 @@
-import React from 'react';
-import { View, Text, StyleSheet, useColorScheme, ScrollView } from 'react-native';
-import { BarChart } from 'react-native-gifted-charts';
+// VisitorGrowthRateChart.js
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { LineChart } from 'react-native-gifted-charts';
+import { useTheme } from '@/assets/theme/ThemeContext';
 import { formatCompactNumber, formatReadableNumber } from '@/utils/numberFormatter';
 
-const capitalizeWords = (str) => {
-  return str
-    .toLowerCase()
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
-
-export default function MarketSourceChart({
-  data = [],
-  yLabel = 'Visitor Arrivals',
-  title = 'Top 10 Sources of Markets (2024 vs 2025)',
+export default function VisitorGrowthRateChart({
+  title = 'Visitor Growth Rate',
+  labels = [],
+  oldData = [],
+  newData = [],
+  minPxPerPoint = 20,
+  minChartPaddingPx = 10,
+  period,
+  comparePeriod,
+  isAnimationActive = false,
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  
+  const { colors, isDark, spacing, typography } = useTheme();
+  const [selectedPoint, setSelectedPoint] = useState(null);
+
+  const hasOldData = oldData.some(v => v != null);
+  const hasNewData = newData.some(v => v != null);
+
+  // Find highest value
+  const highest = useMemo(() => {
+    const all = [...oldData, ...newData].filter(v => typeof v === 'number' && !isNaN(v));
+    return all.length ? Math.max(...all) : 0;
+  }, [oldData, newData]);
+
+  // Smart rounding for Y-axis
+  const roundedMax = useMemo(() => {
+    if (highest === 0) return 100;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(highest)));
+    const normalized = highest / magnitude;
+
+    let rounded;
+    if (normalized <= 1) rounded = 1;
+    else if (normalized <= 2) rounded = 2;
+    else if (normalized <= 3) rounded = 3;
+    else if (normalized <= 5) rounded = 5;
+    else if (normalized <= 7.5) rounded = 7.5;
+    else rounded = 10;
+
+    return rounded * magnitude;
+  }, [highest]);
+
+  // Prepare data for gifted-charts
+  const oldChartData = labels.map((label, i) => ({
+    value: oldData[i] ?? 0,
+    label: label,
+    dataPointText: oldData[i]?.toString() ?? '0',
+  }));
+
+  const newChartData = labels.map((label, i) => ({
+    value: newData[i] ?? 0,
+    label: label,
+    dataPointText: newData[i]?.toString() ?? '0',
+  }));
+
   const textColor = isDark ? '#CACDD6' : '#828898';
-  const backgroundColor = isDark ? '#1a1a1a' : '#ffffff';
-
-  const safeData =
-    Array.isArray(data) && data.length > 0
-      ? data
-      : [{ country: 'No Data', value: 0, change: 0 }];
-
-  // Calculate total for percentage calculation
-  const total = safeData.reduce((sum, item) => sum + (item.value ?? 0), 0);
-
-  // Prepare bar chart data with percentage labels
-  const barData = safeData.map((item) => {
-    const changeValue = item.change ?? 0;
-    const changeColor = changeValue > 0 ? '#22C55E' : '#EF4444';
-    const changeText = changeValue > 0 ? `+${changeValue}%` : `${changeValue}%`;
-    
-    // Calculate percentage of total
-    const percentage = total > 0 ? ((item.value ?? 0) / total * 100).toFixed(0) : 0;
-
-    return {
-      value: item.value ?? 0,
-      label: capitalizeWords(item.country || ''),
-      frontColor: '#EBC855',
-      spacing: 2,
-      labelWidth: 70,
-      labelTextStyle: {
-        color: textColor,
-        fontSize: 9,
-        transform: [{ rotate: '-30deg' }],
-      },
-      // Top label showing percentage change and percentage of total
-      topLabelComponent: () => (
-        <View style={{ alignItems: 'center' }}>
-          <Text
-            style={{
-              fontSize: 10,
-              fontWeight: '600',
-              color: changeColor,
-              marginBottom: 2,
-            }}
-          >
-            {changeText}
-          </Text>
-          <Text
-            style={{
-              fontSize: 9,
-              color: textColor,
-              marginBottom: 2,
-            }}
-          >
-            {percentage}%
-          </Text>
-        </View>
-      ),
-    };
-  });
+  const gridColor = isDark ? '#CACDD680' : '#82889880';
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
-      <Text style={[styles.title, { color: isDark ? '#E5E7EB' : '#313638' }]}>
-        {title}
-      </Text>
-
-      <View style={styles.chartWrapper}>
-        {yLabel && (
-          <View style={styles.yAxisLabel}>
-            <Text style={[styles.yAxisText, { color: textColor }]}>
-              {yLabel}
+    <View style={[styles.container, { backgroundColor: colors.card }]}>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      
+      {selectedPoint && (
+        <View style={[styles.tooltip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.tooltipLabel, { color: colors.text }]}>
+            {labels[selectedPoint.index]}
+          </Text>
+          {hasOldData && (
+            <Text style={[styles.tooltipValue, { color: '#D9D9D9' }]}>
+              {comparePeriod}: {formatReadableNumber(oldData[selectedPoint.index])}
             </Text>
-          </View>
-        )}
+          )}
+          {hasNewData && (
+            <Text style={[styles.tooltipValue, { color: '#D4AF37' }]}>
+              {period}: {formatReadableNumber(newData[selectedPoint.index])}
+            </Text>
+          )}
+        </View>
+      )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-          <View style={styles.chartContainer}>
-            <BarChart
-              data={barData}
-              height={220}
-              width={Math.max(safeData.length * 50, 300)}
-              barWidth={32}
-              spacing={50}
-              initialSpacing={25}
-              endSpacing={25}
+      <View style={styles.chartRow}>
+        <View style={styles.yLabelContainer}>
+          <Text style={[styles.yLabel, { color: textColor }]}>
+            Growth Rate (%)
+          </Text>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollView}>
+          <View style={styles.chartWrapper}>
+            <LineChart
+              data={hasNewData ? newChartData : []}
+              data2={hasOldData ? oldChartData : []}
+              height={200}
+              width={Math.max(labels.length * minPxPerPoint, 300)}
+              maxValue={roundedMax}
               noOfSections={4}
-              yAxisColor={textColor}
-              xAxisColor={textColor}
-              yAxisTextStyle={{ color: textColor, fontSize: 11 }}
-              rulesColor={isDark ? 'rgba(202, 205, 214, 0.2)' : 'rgba(130, 136, 152, 0.2)'}
-              rulesType="solid"
-              formatYLabel={formatCompactNumber}
-              showValuesAsTopLabel={false}
-              maxValue={Math.max(...safeData.map(d => d.value)) * 1.15}
-              // Enable press interaction
-              showStripOnPress
-              stripColor={isDark ? '#ffffff20' : '#00000020'}
-              stripWidth={1}
-              stripOpacity={0.3}
-              renderTooltip={(item, index) => {
-                const country = safeData[index]?.country || '';
-                const value = safeData[index]?.value || 0;
-                const change = safeData[index]?.change || 0;
-                const changeColor = change > 0 ? '#22C55E' : '#EF4444';
-                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                
-                return (
-                  <View
-                    style={{
-                      backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-                      borderRadius: 8,
-                      padding: 10,
-                      borderWidth: 1,
-                      borderColor: isDark ? '#CACDD680' : '#82889880',
-                      minWidth: 140,
-                      marginBottom: 10,
-                      marginLeft: -50,
-                    }}
-                  >
-                    <Text style={{ color: textColor, fontSize: 11, fontWeight: '600', marginBottom: 6 }}>
-                      {capitalizeWords(country)}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#EBC855', marginRight: 6 }} />
-                      <Text style={{ color: textColor, fontSize: 10 }}>
-                        Arrivals: {formatReadableNumber(value)}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <Text style={{ color: textColor, fontSize: 10, marginRight: 4 }}>
-                        Share:
-                      </Text>
-                      <Text style={{ color: textColor, fontSize: 10, fontWeight: '600' }}>
-                        {percentage}%
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Text style={{ color: textColor, fontSize: 10, marginRight: 4 }}>
-                        Change:
-                      </Text>
-                      <Text style={{ color: changeColor, fontSize: 10, fontWeight: '600' }}>
-                        {change > 0 ? `+${change}%` : `${change}%`}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              }}
+              yAxisTextStyle={{ color: textColor, fontSize: 12 }}
+              xAxisLabelTextStyle={{ color: textColor, fontSize: 10 }}
+              color1="#D4AF37"
+              color2="#D9D9D9"
+              thickness1={2}
+              thickness2={2}
+              curved
+              hideDataPoints={false}
+              dataPointsColor1="#D4AF37"
+              dataPointsColor2="#D9D9D9"
+              dataPointsRadius={4}
+              rulesColor={gridColor}
+              yAxisColor={gridColor}
+              xAxisColor={gridColor}
+              hideRules={false}
+              yAxisLabelSuffix=""
+              formatYLabel={(value) => formatCompactNumber(parseFloat(value))}
+              onPress={(item, index) => setSelectedPoint({ item, index })}
+              hideOrigin
+              animateOnDataChange={isAnimationActive}
+              animationDuration={500}
+              spacing={Math.max(minPxPerPoint, 40)}
             />
           </View>
         </ScrollView>
       </View>
+
+      {(hasOldData || hasNewData) && (
+        <View style={styles.legend}>
+          {hasNewData && (
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#D4AF37' }]} />
+              <Text style={[styles.legendText, { color: textColor }]}>
+                {period} (Current)
+              </Text>
+            </View>
+          )}
+          {hasOldData && (
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#D9D9D9' }]} />
+              <Text style={[styles.legendText, { color: textColor }]}>
+                {comparePeriod} (Comparison)
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 20,
     borderRadius: 8,
+    marginVertical: 10,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 16,
   },
-  chartWrapper: {
+  chartRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  yAxisLabel: {
+  yLabelContainer: {
     width: 20,
-    height: 220,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 8,
   },
-  yAxisText: {
+  yLabel: {
     fontSize: 12,
     transform: [{ rotate: '-90deg' }],
-    width: 220,
+    width: 200,
     textAlign: 'center',
   },
-  chartContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  chartWrapper: {
     paddingVertical: 10,
+  },
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    marginTop: 16,
+    gap: 16,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 8,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  legendText: {
+    fontSize: 12,
+  },
+  tooltip: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  tooltipLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  tooltipValue: {
+    fontSize: 12,
+    marginVertical: 2,
+  },
+  overlayTooltip: {
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    minWidth: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  overlayLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  overlayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  overlayDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  overlayValue: {
+    fontSize: 11,
+  },
+  barLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginBottom: 2,
   },
 });

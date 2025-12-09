@@ -5,9 +5,9 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  useColorScheme,
 } from 'react-native';
 import { format, startOfMonth, isAfter } from 'date-fns';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 const months = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -20,8 +20,7 @@ export default function MonthYearInput({
   onSelect = () => {},
   availablePeriods = [],
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, isDark, radius, spacing, typography, fonts } = useTheme();
   const today = startOfMonth(new Date());
   const [selectedDate, setSelectedDate] = useState(
     value ? startOfMonth(new Date(value)) : today
@@ -78,26 +77,68 @@ export default function MonthYearInput({
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.label, isDark && styles.labelDark]}>
+    <View style={[styles.container, { marginBottom: spacing.lg - 4 }]}>
+      <Text style={[
+        styles.label,
+        {
+          fontSize: typography.fontSize.md - 1,
+          color: colors.text,
+          marginBottom: spacing.xs + 1,
+          fontFamily: fonts.gotham,
+        }
+      ]}>
         {placeholder}
       </Text>
 
       <View style={styles.dropdownWrapper}>
         <TouchableOpacity
-          style={[styles.button, isDark && styles.buttonDark]}
+          style={[
+            styles.button,
+            {
+              padding: spacing.sm + 4,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: radius.md,
+              backgroundColor: isDark ? colors.surface : colors.card,
+            }
+          ]}
           onPress={() => setDropdownVisible(!dropdownVisible)}
         >
-          <Text style={[styles.buttonText, isDark && styles.buttonTextDark]}>
+          <Text style={[
+            styles.buttonText,
+            {
+              fontSize: typography.fontSize.md - 1,
+              color: colors.text,
+              fontFamily: fonts.gotham,
+            }
+          ]}>
             {formattedDate}
           </Text>
-          <Text style={[styles.arrow, isDark && styles.arrowDark]}>▼</Text>
+          <Text style={[
+            styles.arrow,
+            {
+              fontSize: typography.fontSize.xs,
+              color: colors.text,
+              fontFamily: fonts.gotham,
+            }
+          ]}>▼</Text>
         </TouchableOpacity>
 
         {dropdownVisible && (
-          <View style={[styles.dropdownContent, isDark && styles.dropdownContentDark]}>
+          <View style={[
+            styles.dropdownContent,
+            {
+              marginTop: spacing.xs,
+              backgroundColor: isDark ? colors.surface : colors.card,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: radius.md,
+              padding: spacing.md,
+              shadowColor: isDark ? '#000' : colors.border,
+            }
+          ]}>
             {/* Months Grid */}
-            <View style={styles.monthGrid}>
+            <View style={[styles.monthGrid, { marginBottom: spacing.md }]}>
               {months.map((month, idx) => {
                 const monthKey = `${selectedDate.getFullYear()}-${String(
                   idx + 1
@@ -115,8 +156,15 @@ export default function MonthYearInput({
                     disabled={disabled}
                     style={[
                       styles.monthButton,
-                      isSelected &&
-                        (isDark ? styles.monthSelectedDark : styles.monthSelected),
+                      {
+                        padding: spacing.sm + 2,
+                        borderRadius: radius.md,
+                        backgroundColor: isDark ? colors.secondary : colors.secondary,
+                        marginBottom: spacing.sm,
+                      },
+                      isSelected && {
+                        backgroundColor: isDark ? '#333' : '#e5e5e5',
+                      },
                       disabled && styles.monthDisabled,
                     ]}
                     onPress={() =>
@@ -126,9 +174,13 @@ export default function MonthYearInput({
                     <Text
                       style={[
                         styles.monthText,
-                        isDark && styles.monthTextDark,
+                        {
+                          fontSize: typography.fontSize.sm,
+                          color: colors.text,
+                          fontFamily: fonts.gotham,
+                        },
                         isSelected && styles.monthTextSelected,
-                        disabled && styles.monthTextDisabled,
+                        disabled && { color: colors.placeholder },
                       ]}
                     >
                       {month.slice(0, 3)}
@@ -141,33 +193,78 @@ export default function MonthYearInput({
             {/* Year Dropdown */}
             <View style={styles.yearDropdownContainer}>
               <TouchableOpacity
-                style={[styles.yearDropdownButton, isDark && styles.yearDropdownButtonDark]}
+                style={[
+                  styles.yearDropdownButton,
+                  {
+                    padding: spacing.sm + 4,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: radius.md,
+                    backgroundColor: isDark ? colors.surface : colors.card,
+                  }
+                ]}
                 onPress={() => setShowYearDropdown(!showYearDropdown)}
               >
-                <Text style={[styles.yearDropdownText, isDark && styles.yearDropdownTextDark]}>
+                <Text style={[
+                  styles.yearDropdownText,
+                  {
+                    fontSize: typography.fontSize.md - 1,
+                    color: colors.text,
+                    fontWeight: typography.weight.semibold,
+                    fontFamily: fonts.gotham,
+                  }
+                ]}>
                   {selectedDate.getFullYear()}
                 </Text>
-                <Text style={[styles.arrow, isDark && styles.arrowDark]}>
+                <Text style={[
+                  styles.arrow,
+                  {
+                    fontSize: typography.fontSize.xs,
+                    color: colors.text,
+                    fontFamily: fonts.gotham,
+                  }
+                ]}>
                   {showYearDropdown ? '▲' : '▼'}
                 </Text>
               </TouchableOpacity>
 
               {showYearDropdown && (
-                <View style={[styles.yearDropdownList, isDark && styles.yearDropdownListDark]}>
+                <View style={[
+                  styles.yearDropdownList,
+                  {
+                    marginBottom: spacing.xs,
+                    backgroundColor: isDark ? colors.surface : colors.card,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: radius.md,
+                    shadowColor: isDark ? '#000' : colors.border,
+                  }
+                ]}>
                   <ScrollView style={styles.yearScrollView} nestedScrollEnabled>
                     {availableYears.map((yr) => (
                       <TouchableOpacity
                         key={yr}
                         style={[
                           styles.yearDropdownItem,
-                          yr === selectedDate.getFullYear() && styles.yearDropdownItemSelected,
+                          {
+                            padding: spacing.sm + 4,
+                            borderBottomWidth: 1,
+                            borderBottomColor: colors.border,
+                          },
+                          yr === selectedDate.getFullYear() && {
+                            backgroundColor: isDark ? colors.secondary : colors.secondary,
+                          },
                         ]}
                         onPress={() => handleYearChange(yr)}
                       >
                         <Text
                           style={[
                             styles.yearDropdownItemText,
-                            isDark && styles.yearDropdownItemTextDark,
+                            {
+                              fontSize: typography.fontSize.md - 1,
+                              color: colors.text,
+                              fontFamily: fonts.gotham,
+                            },
                             yr === selectedDate.getFullYear() && styles.yearDropdownItemTextSelected,
                           ]}
                         >
@@ -187,16 +284,9 @@ export default function MonthYearInput({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 20,
-  },
+  container: {},
   label: {
-    fontSize: 15,
-    color: '#1e1e1e',
-    marginBottom: 5,
-  },
-  labelDark: {
-    color: '#d2d2d2',
+    fontWeight: '400',
   },
   dropdownWrapper: {
     position: 'relative',
@@ -206,87 +296,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#C0BFBF',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  buttonDark: {
-    backgroundColor: '#1a1a1a',
-    borderColor: '#555',
   },
   buttonText: {
-    fontSize: 15,
-    color: '#313638',
-  },
-  buttonTextDark: {
-    color: '#e5e5e5',
+    fontWeight: '400',
   },
   arrow: {
-    fontSize: 12,
-    color: '#313638',
-  },
-  arrowDark: {
-    color: '#e5e5e5',
+    fontWeight: '400',
   },
   dropdownContent: {
     position: 'absolute',
     top: '100%',
     left: 0,
     right: 0,
-    marginTop: 4,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#C0BFBF',
-    borderRadius: 8,
-    padding: 16,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
     zIndex: 1001,
   },
-  dropdownContentDark: {
-    backgroundColor: '#1a1a1a',
-    borderColor: '#555',
-  },
   monthGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 16,
   },
   monthButton: {
     width: '31%',
-    padding: 10,
-    borderRadius: 8,
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    marginBottom: 8,
-  },
-  monthSelected: {
-    backgroundColor: '#e5e5e5',
-  },
-  monthSelectedDark: {
-    backgroundColor: '#333',
   },
   monthDisabled: {
     opacity: 0.4,
   },
   monthText: {
-    fontSize: 14,
-    color: '#313638',
-  },
-  monthTextDark: {
-    color: '#e5e5e5',
+    fontWeight: '400',
   },
   monthTextSelected: {
     fontWeight: 'bold',
-  },
-  monthTextDisabled: {
-    color: '#999',
   },
   yearDropdownContainer: {
     position: 'relative',
@@ -296,63 +340,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#C0BFBF',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  yearDropdownButtonDark: {
-    backgroundColor: '#1a1a1a',
-    borderColor: '#555',
   },
   yearDropdownText: {
-    fontSize: 15,
-    color: '#313638',
     fontWeight: '600',
-  },
-  yearDropdownTextDark: {
-    color: '#e5e5e5',
   },
   yearDropdownList: {
     position: 'absolute',
     bottom: '100%',
     left: 0,
     right: 0,
-    marginBottom: 4,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#C0BFBF',
-    borderRadius: 8,
     maxHeight: 200,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
     zIndex: 1003,
   },
-  yearDropdownListDark: {
-    backgroundColor: '#1a1a1a',
-    borderColor: '#555',
-  },
   yearScrollView: {
     maxHeight: 200,
   },
   yearDropdownItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  yearDropdownItemSelected: {
-    backgroundColor: '#f5f5f5',
+    fontWeight: '400',
   },
   yearDropdownItemText: {
-    fontSize: 15,
-    color: '#313638',
-  },
-  yearDropdownItemTextDark: {
-    color: '#e5e5e5',
+    fontWeight: '400',
   },
   yearDropdownItemTextSelected: {
     fontWeight: 'bold',

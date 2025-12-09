@@ -53,7 +53,6 @@ export const getCurrentUser = async () => {
   try {
     const res = await api.get("/accounts/get-user/");
     console.log('✅ User data retrieved successfully');
-    console.log('📦 Raw user data:', res.data);
     return res.data; // Just return raw data - let AuthContext handle extraction
   } catch (error) {
     console.error('❌ Failed to get user data:', error.response?.data || error.message);
