@@ -38,10 +38,12 @@ export default function EditInventoryModal({ open, onClose }) {
   // Preload current values when modal opens
   useEffect(() => {
     if (!profile || !open) return;
-    setTotalRooms(profile.total_rooms || '');
-    setAvailableRooms(profile.available_rooms ?? '');
-    setMaleEmployees(profile.male_employees || '');
-    setFemaleEmployees(profile.female_employees || '');
+    
+    // Convert to string and handle null/undefined values properly
+    setTotalRooms(profile.total_rooms != null ? String(profile.total_rooms) : '');
+    setAvailableRooms(profile.available_rooms != null ? String(profile.available_rooms) : '');
+    setMaleEmployees(profile.male_employees != null ? String(profile.male_employees) : '');
+    setFemaleEmployees(profile.female_employees != null ? String(profile.female_employees) : '');
   }, [profile, open]);
 
   // Save handler
@@ -55,12 +57,12 @@ export default function EditInventoryModal({ open, onClose }) {
 
     let hasError = false;
 
-    if (!totalRooms) {
+    if (!totalRooms || totalRooms.trim() === '') {
       newErrors.totalRooms = 'Total Rooms is required';
       hasError = true;
     }
 
-    if (!availableRooms) {
+    if (!availableRooms || availableRooms.trim() === '') {
       newErrors.availableRooms = 'Available Rooms is required';
       hasError = true;
     } else if (Number(availableRooms) > Number(totalRooms)) {
@@ -68,12 +70,12 @@ export default function EditInventoryModal({ open, onClose }) {
       hasError = true;
     }
 
-    if (!maleEmployees) {
+    if (!maleEmployees || maleEmployees.trim() === '') {
       newErrors.maleEmployees = 'Required';
       hasError = true;
     }
 
-    if (!femaleEmployees) {
+    if (!femaleEmployees || femaleEmployees.trim() === '') {
       newErrors.femaleEmployees = 'Required';
       hasError = true;
     }
@@ -87,10 +89,10 @@ export default function EditInventoryModal({ open, onClose }) {
       setLoading(true);
 
       const payload = {
-        total_rooms: totalRooms,
-        available_rooms: availableRooms,
-        male_employees: maleEmployees,
-        female_employees: femaleEmployees,
+        total_rooms: Number(totalRooms),
+        available_rooms: Number(availableRooms),
+        male_employees: Number(maleEmployees),
+        female_employees: Number(femaleEmployees),
       };
 
       await updateCurrentUser(payload);
