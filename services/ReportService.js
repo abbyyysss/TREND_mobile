@@ -1,4 +1,4 @@
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from "@/services/Api"
 import { formatAEType } from "@/utils/aeTypes"
 import { formatDate } from "@/utils/dateUtils"
@@ -7,19 +7,23 @@ const STORAGE_KEYS = {
   NATIONALITIES: "monthly_report_nationalities",
 }
 
-// Local Storage Helpers
+// AsyncStorage Helpers
 const storage = {
-  save(key, value) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(key, JSON.stringify(value))
+  async save(key, value) {
+    try {
+      await AsyncStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.error('Error saving to AsyncStorage:', error);
     }
   },
-  load(key, fallback = []) {
-    if (typeof window !== "undefined") {
-      const cached = localStorage.getItem(key)
-      if (cached) return JSON.parse(cached)
+  async load(key, fallback = []) {
+    try {
+      const cached = await AsyncStorage.getItem(key);
+      if (cached) return JSON.parse(cached);
+    } catch (error) {
+      console.error('Error loading from AsyncStorage:', error);
     }
-    return fallback
+    return fallback;
   },
 }
 
@@ -33,16 +37,16 @@ const MonthlyReportService = {
         country: n.country,
       }))
 
-      storage.save(STORAGE_KEYS.NATIONALITIES, nationalities)
+      await storage.save(STORAGE_KEYS.NATIONALITIES, nationalities)
       return nationalities
     } catch (error) {
       console.error("Error fetching nationalities:", error)
-      return storage.load(STORAGE_KEYS.NATIONALITIES)
+      return await storage.load(STORAGE_KEYS.NATIONALITIES)
     }
   },
 
-  prepareData(formData) {
-    const cachedNationalities = storage.load(STORAGE_KEYS.NATIONALITIES)
+  async prepareData(formData) {
+    const cachedNationalities = await storage.load(STORAGE_KEYS.NATIONALITIES)
 
     return {
       month: formData.month,
@@ -77,7 +81,7 @@ const MonthlyReportService = {
     try {
       await Promise.all([this.getNationalities()])
 
-      const payload = this.prepareData(formData)
+      const payload = await this.prepareData(formData)
       const endpoint = "/reports/monthlyreports/"
       const url = id ? `${endpoint}${id}/` : endpoint
       console.log("Submitting monthly report payload:", payload)
@@ -96,7 +100,6 @@ const MonthlyReportService = {
   async fetchGuestMetrics(params = {}) {
     try {
       const { data } = await api.get("/reports/guest-metrics/", { params })
-      console.log("Guest metrics data:", data)
       return data
     } catch (error) {
       console.error("Error fetching guest metrics:", error)
@@ -308,7 +311,7 @@ export const fetchAllMergedReports = async (params = {}) => {
 
   while (next) {
     console.log(`Fetching page ${page}...`);
-    const res = await fetchMergedReports({ ...params, page, page_size: 100 });
+    const res = await MonthlyReportService.fetchMergedReports({ ...params, page, page_size: 100 });
 
     const mapped = res?.mapped || [];
     allResults = [...allResults, ...mapped];

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,230 +6,248 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@/assets/theme/ThemeContext';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/assets/theme/ThemeContext";
 
 export default function FilterSelectInput({
   options = [],
-  placeholder = 'Select an option',
-  placeholderOption = '',
+  placeholder = "Select an option",
+  placeholderOption = "",
   onSelect = () => {},
-  className = '',
-  value = '',
+  value = "",
   isFilterIcon = false,
   disabled = false,
 }) {
-  const { colors, spacing, typography, radius } = useTheme();
+  const { colors, spacing, typography, radius, fonts } = useTheme();
 
-  const initialValue = useMemo(
-    () => value || placeholderOption || options[0] || '',
-    [value, placeholderOption, options]
-  );
+  const isDisabled = Boolean(disabled);
+
+  // Initial value priority
+  const initialValue = value || placeholderOption || "";
 
   const [searchQuery, setSearchQuery] = useState(initialValue);
   const [selected, setSelected] = useState(initialValue);
-  const [hasTyped, setHasTyped] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [hasTyped, setHasTyped] = useState(false);
 
-  // 🧠 store last valid selection before user types
   const lastSelectedRef = useRef(initialValue);
 
-  const mergedOptions = useMemo(
-    () => (placeholderOption ? [placeholderOption, ...options] : options),
-    [placeholderOption, options]
-  );
+  // Merge placeholder option
+  const mergedOptions = useMemo(() => {
+    return placeholderOption ? [placeholderOption, ...options] : [...options];
+  }, [placeholderOption, options]);
 
+  // Filter list based on text
   const filtered = useMemo(() => {
     if (!hasTyped) return mergedOptions;
-    const lowerQuery = searchQuery.toLowerCase();
-    return mergedOptions.filter((option) => {
-      const label = typeof option === 'object' ? option.label : option;
-      return label.toLowerCase().includes(lowerQuery);
+    const q = searchQuery.toLowerCase();
+
+    return mergedOptions.filter((opt) => {
+      const label = typeof opt === "object" ? opt.label : opt;
+      return label.toLowerCase().includes(q);
     });
   }, [hasTyped, searchQuery, mergedOptions]);
 
+  // Handle selection
   const handleSelect = useCallback(
     (option) => {
-      const label = typeof option === 'object' ? option.label : option;
+      const label = typeof option === "object" ? option.label : option;
+
       setSelected(label);
       setSearchQuery(label);
       setHasTyped(false);
       setIsOpen(false);
-      lastSelectedRef.current = label; // ✅ remember latest valid option
+      lastSelectedRef.current = label;
+
       onSelect(label);
     },
     [onSelect]
   );
 
-  useEffect(() => {
-    if (!placeholderOption || initialValue !== placeholderOption) {
-      onSelect(initialValue);
-    }
-  }, [initialValue, onSelect, placeholderOption]);
+  // Close modal
+  const handleModalClose = useCallback(() => {
+    setIsOpen(false);
 
+    // Restore last valid selection
+    if (!selected && lastSelectedRef.current) {
+      setSelected(lastSelectedRef.current);
+      setSearchQuery(lastSelectedRef.current);
+    }
+
+    setHasTyped(false);
+  }, [selected]);
+
+  // Sync parent value changes
   useEffect(() => {
-    if (value) {
-      setSearchQuery(value);
+    if (value !== selected) {
       setSelected(value);
+      setSearchQuery(value);
+      lastSelectedRef.current = value;
     }
   }, [value]);
 
   return (
     <View style={{ marginBottom: spacing.sm }}>
+      {/* Label */}
       <Text
         style={{
           fontSize: typography.fontSize.sm,
-          color: disabled ? colors.textSecondary : colors.text,
+          color: isDisabled ? colors.textSecondary : colors.text,
+          fontFamily: fonts.gotham,
           marginBottom: spacing.xs,
-          opacity: disabled ? 0.5 : 1,
+          opacity: isDisabled ? 0.5 : 1,
         }}
       >
         {placeholder}
       </Text>
 
+      {/* Main button */}
       <View
         style={{
           borderWidth: 1,
           borderColor: colors.border,
           borderRadius: radius.md,
-          backgroundColor: disabled ? colors.secondary : colors.surface,
+          backgroundColor: isDisabled ? colors.secondary : colors.surface,
         }}
       >
         <TouchableOpacity
-          disabled={disabled}
+          disabled={isDisabled}
           onPress={() => {
-            if (!disabled) {
+            if (!isDisabled) {
               setIsOpen(true);
               setHasTyped(false);
             }
           }}
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
             paddingHorizontal: spacing.md,
             paddingVertical: spacing.md,
-            opacity: disabled ? 0.5 : 1,
+            opacity: isDisabled ? 0.5 : 1,
           }}
+          activeOpacity={0.7}
         >
-          <TextInput
-            value={searchQuery}
-            editable={!disabled}
-            onFocus={() => {
-              if (!disabled) {
-                setIsOpen(true);
-                setSearchQuery(''); // 👈 clear text when focusing
-                setSelected('');
-              }
-            }}
-            onChangeText={(val) => {
-              // 👇 When user starts typing for the first time, clear previous selection
-              if (!hasTyped && val.length === 1 && selected) {
-                setSearchQuery(val); // start fresh with just the typed letter
-                setSelected('');
-              } else {
-                setSearchQuery(val);
-              }
-              setHasTyped(val.trim().length > 0);
-              setIsOpen(true);
-            }}
+          <Text
             style={{
               flex: 1,
-              color: disabled ? colors.textSecondary : colors.placeholder,
+              color: searchQuery ? colors.text : colors.placeholder,
+              fontFamily: fonts.gotham,
               fontSize: typography.fontSize.md,
             }}
-            placeholderTextColor={colors.placeholder}
-            placeholder=""
-          />
+            numberOfLines={1}
+          >
+            {searchQuery || placeholder}
+          </Text>
+
           {isFilterIcon ? (
-            <Ionicons 
-              name="filter-outline" 
-              size={16} 
-              color={disabled ? colors.textSecondary : colors.text} 
+            <Ionicons
+              name="filter-outline"
+              size={16}
+              color={isDisabled ? colors.textSecondary : colors.text}
             />
           ) : (
-            <Ionicons 
-              name={isOpen ? 'chevron-up' : 'chevron-down'} 
-              size={20} 
-              color={disabled ? colors.textSecondary : colors.text} 
+            <Ionicons
+              name={isOpen ? "chevron-up" : "chevron-down"}
+              size={20}
+              color={isDisabled ? colors.textSecondary : colors.text}
+        
             />
           )}
         </TouchableOpacity>
       </View>
 
-      {/* Dropdown Modal */}
+      {/* Modal */}
       <Modal
         visible={isOpen}
-        transparent
+        transparent={true}
         animationType="fade"
-        onRequestClose={() => {
-          setIsOpen(false);
-          // ✅ If user didn't select anything new, restore last selected value
-          if (!selected && lastSelectedRef.current) {
-            setSearchQuery(lastSelectedRef.current);
-            setSelected(lastSelectedRef.current);
-            setHasTyped(false);
-          }
-        }}
+        onRequestClose={handleModalClose}
       >
         <TouchableOpacity
           style={{
             flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'center',
-            alignItems: 'center',
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "center",
+            alignItems: "center",
           }}
           activeOpacity={1}
-          onPress={() => {
-            setIsOpen(false);
-            if (!selected && lastSelectedRef.current) {
-              setSearchQuery(lastSelectedRef.current);
-              setSelected(lastSelectedRef.current);
-              setHasTyped(false);
-            }
-          }}
+          onPress={handleModalClose}
         >
-          <View
+          <TouchableOpacity
+            activeOpacity={1}
             style={{
               backgroundColor: colors.card,
               borderRadius: radius.lg,
               borderWidth: 1,
               borderColor: colors.border,
-              width: '80%',
+              width: "80%",
               maxWidth: 400,
-              maxHeight: 300,
-              padding: spacing.xs,
+              maxHeight: 350,
             }}
           >
-            <ScrollView>
+            {/* Search input */}
+            <View
+              style={{
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border,
+                padding: spacing.md,
+              }}
+            >
+              <TextInput
+                value={searchQuery}
+                onChangeText={(text) => {
+                  setSearchQuery(text);
+                  setHasTyped(text.trim().length > 0);
+                }}
+                style={{
+                  color: colors.text,
+                  fontSize: typography.fontSize.md,
+                  fontFamily: fonts.gotham,
+                  padding: spacing.sm,
+                  backgroundColor: colors.surface,
+                  borderRadius: radius.md,
+                }}
+                placeholder="Search..."
+                placeholderTextColor={colors.placeholder}
+                autoFocus
+              />
+            </View>
+
+            {/* Options */}
+            <ScrollView style={{ padding: spacing.xs }}>
               {filtered.length > 0 ? (
                 filtered.map((option, idx) => {
-                  const isObject = typeof option === 'object' && option !== null;
-                  const label = isObject ? option.label : option;
-                  const key = isObject ? option.key : option;
-                  const isPlaceholderDisabled = placeholderOption && idx === 0;
+                  const label =
+                    typeof option === "object" ? option.label : option;
+                  const key =
+                    typeof option === "object" ? option.key : option;
+
+                  const isPlaceholder = placeholderOption && idx === 0;
 
                   return (
                     <TouchableOpacity
-                      key={key}
-                      disabled={isPlaceholderDisabled}
+                      key={`${key}-${idx}`}
+                      disabled={Boolean(isPlaceholder)}
                       onPress={() => handleSelect(option)}
                       style={{
                         paddingHorizontal: spacing.md,
                         paddingVertical: spacing.sm,
                         borderRadius: radius.md,
+                        backgroundColor:
+                          selected === label ? colors.primary + "22" : "transparent",
+                        opacity: isPlaceholder ? 0.5 : 1,
                       }}
                     >
                       <Text
                         style={{
-                          color: isPlaceholderDisabled
+                          color: isPlaceholder
                             ? colors.textSecondary
                             : colors.text,
                           fontSize: typography.fontSize.md,
-                          opacity: isPlaceholderDisabled ? 0.5 : 1,
+                          fontFamily: fonts.gotham,
                         }}
-                        numberOfLines={1}
                       >
                         {label}
                       </Text>
@@ -237,19 +255,20 @@ export default function FilterSelectInput({
                   );
                 })
               ) : (
-                <View style={{ padding: spacing.md }}>
+                <View style={{ padding: spacing.md, alignItems: "center" }}>
                   <Text
                     style={{
                       color: colors.textSecondary,
                       fontSize: typography.fontSize.sm,
+                      fontFamily: fonts.gotham,
                     }}
                   >
-                    No results
+                    No results found
                   </Text>
                 </View>
               )}
             </ScrollView>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
     </View>

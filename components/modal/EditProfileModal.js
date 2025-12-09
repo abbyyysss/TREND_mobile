@@ -105,7 +105,7 @@ export default function EditProfileModal({ open, onClose, profile, account, role
                   <View style={[styles.photoContainer, { gap: spacing.md }]}>
                     <EditProfileHeaderButton
                       text="Profile Picture"
-                      onClick={() => setUploadPhotoContext('profile')}
+                      onPress={() => setUploadPhotoContext('profile')}
                     />
                     <Image
                       source={typeof profilePhoto === 'string' ? { uri: profilePhoto } : profilePhoto}
@@ -119,7 +119,7 @@ export default function EditProfileModal({ open, onClose, profile, account, role
                     />
                     <EditProfileHeaderButton
                       text="Cover Photo"
-                      onClick={() => setUploadPhotoContext('cover')}
+                      onPress={() => setUploadPhotoContext('cover')}
                     />
                     <Image
                       source={typeof coverPhoto === 'string' ? { uri: coverPhoto } : coverPhoto}
@@ -148,7 +148,7 @@ export default function EditProfileModal({ open, onClose, profile, account, role
                 >
                   <EditProfileHeaderButton
                     text="User Information"
-                    onClick={() => setOpenEditProfileInfoModal(true)}
+                    onPress={() => setOpenEditProfileInfoModal(true)}
                   />
                   {infos.map((info) => {
                     const isAccreditation = info._isAccreditation === true;

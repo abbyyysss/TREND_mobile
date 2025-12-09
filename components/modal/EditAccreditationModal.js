@@ -371,7 +371,7 @@ export default function EditAccreditationModal({ open, onClose }) {
                     <View style={styles.uploadButtonContainer}>
                       <UploadButton
                         label="Click to upload or drag and drop your certificate"
-                        onClick={handleClickUploadArea}
+                        onPress={handleClickUploadArea}
                         onDrop={handleDrop}
                         isFile={true}
                         onDragOver={handleDragOver}

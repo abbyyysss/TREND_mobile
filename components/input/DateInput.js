@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '@/assets/theme/ThemeContext';
 
-export default function DateInput() {
-  const [date, setDate] = useState(new Date());
+export default function DateInput({ onFilterChange, initialFilter }) {
+  const [date, setDate] = useState(
+    initialFilter?.date ? new Date(initialFilter.date) : new Date()
+  );
+  const [mode, setMode] = useState(initialFilter?.mode || 'daily');
   const [show, setShow] = useState(false);
-  const {colors, fonts, isDark} = useTheme();
+  const { colors, fonts, isDark } = useTheme();
 
   const formatDate = (date) => {
     const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
@@ -18,10 +21,58 @@ export default function DateInput() {
     const currentDate = selectedDate || date;
     setShow(false);
     setDate(currentDate);
+
+    if (onFilterChange && selectedDate) {
+      const formattedDate = selectedDate.toISOString().split('T')[0];
+      onFilterChange({
+        mode,
+        date: formattedDate,
+      });
+    }
+  };
+
+  const handleModeChange = (newMode) => {
+    setMode(newMode);
+    if (onFilterChange) {
+      onFilterChange({
+        mode: newMode,
+        date: date.toISOString().split('T')[0],
+      });
+    }
   };
 
   return (
     <View style={styles.container}>
+      {/* Mode Selector */}
+      <View style={styles.modeSelector}>
+        {['daily', 'monthly'].map((m) => (
+          <TouchableOpacity
+            key={m}
+            onPress={() => handleModeChange(m)}
+            style={[
+              styles.modeButton,
+              {
+                backgroundColor: mode === m ? colors.primary : 'transparent',
+                borderColor: colors.border,
+              }
+            ]}
+          >
+            <Text
+              style={[
+                styles.modeText,
+                {
+                  color: mode === m ? '#fff' : colors.text,
+                  fontFamily: fonts.gotham,
+                }
+              ]}
+            >
+              {m.charAt(0).toUpperCase() + m.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Date Picker */}
       <TouchableOpacity
         onPress={() => setShow(true)}
         style={[
@@ -62,8 +113,24 @@ export default function DateInput() {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    gap: 12,
     alignItems: 'center',
+  },
+  modeSelector: {
+    flexDirection: 'row',
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  modeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+  },
+  modeText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   button: {
     flexDirection: 'row',

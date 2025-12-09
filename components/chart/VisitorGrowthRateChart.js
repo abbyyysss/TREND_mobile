@@ -1,6 +1,6 @@
 // VisitorGrowthRateChart.js
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { useTheme } from '@/assets/theme/ThemeContext';
 import { formatCompactNumber, formatReadableNumber } from '@/utils/numberFormatter';
@@ -10,13 +10,10 @@ export default function VisitorGrowthRateChart({
   labels = [],
   oldData = [],
   newData = [],
-  minPxPerPoint = 20,
-  minChartPaddingPx = 10,
   period,
   comparePeriod,
-  isAnimationActive = false,
 }) {
-  const { colors, isDark, spacing, typography } = useTheme();
+  const { colors, isDark } = useTheme();
   const [selectedPoint, setSelectedPoint] = useState(null);
 
   const hasOldData = oldData.some(v => v != null);
@@ -96,7 +93,7 @@ export default function VisitorGrowthRateChart({
               data={hasNewData ? newChartData : []}
               data2={hasOldData ? oldChartData : []}
               height={200}
-              width={Math.max(labels.length * minPxPerPoint, 300)}
+              width={Math.max(labels.length * 40, 300)}
               maxValue={roundedMax}
               noOfSections={4}
               yAxisTextStyle={{ color: textColor, fontSize: 12 }}
@@ -118,9 +115,9 @@ export default function VisitorGrowthRateChart({
               formatYLabel={(value) => formatCompactNumber(parseFloat(value))}
               onPress={(item, index) => setSelectedPoint({ item, index })}
               hideOrigin
-              animateOnDataChange={isAnimationActive}
+              animateOnDataChange
               animationDuration={500}
-              spacing={Math.max(minPxPerPoint, 40)}
+              spacing={40}
             />
           </View>
         </ScrollView>
@@ -218,36 +215,6 @@ const styles = StyleSheet.create({
   tooltipValue: {
     fontSize: 12,
     marginVertical: 2,
-  },
-  overlayTooltip: {
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    minWidth: 50,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  overlayLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  overlayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 2,
-  },
-  overlayDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  overlayValue: {
-    fontSize: 11,
   },
   barLabel: {
     fontSize: 10,

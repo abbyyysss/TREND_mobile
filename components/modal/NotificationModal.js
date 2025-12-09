@@ -64,7 +64,7 @@ export default function NotificationModal({ open, onClose, label, description })
                 classProps="text-[13px] md:text-[15px] py-[5px] px-[30px] md:px-[40px]"
                 label="Okay"
                 fullWidth={false}
-                onClick={onClose}
+                onPress={onClose}
               />
             </View>
           </View>

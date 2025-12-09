@@ -81,7 +81,7 @@ export default function ConfirmationModal({
                     <DefaultButton
                       classProps="text-[13px] md:text-[15px] py-[5px]"
                       label={confirmButtonLabel}
-                      onClick={() => {
+                      onPress={() => {
                         onConfirm(); // <- parent decides what happens here
                         onClose();
                       }}
@@ -91,7 +91,7 @@ export default function ConfirmationModal({
                     <DefaultButton
                       classProps="text-[13px] md:text-[15px] py-[5px]"
                       label={cancelButtonLabel}
-                      onClick={onClose}
+                      onPress={onClose}
                       isRed={true}
                     />
                   </View>

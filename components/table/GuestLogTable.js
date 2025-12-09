@@ -64,20 +64,20 @@ export default function GuestLogTable({
             isBlue
             isTransparent
             fullWidth={false}
-            onClick={() => openGuestLogModal('view', row.id)}
+            onPress={() => openGuestLogModal('view', row.id)}
           />
           <DefaultButton
             label="Edit"
             isTransparent
             fullWidth={false}
-            onClick={() => openGuestLogModal('edit', row.id)}
+            onPress={() => openGuestLogModal('edit', row.id)}
           />
           <DefaultButton
             label="Delete"
             isTransparent
             isRed
             fullWidth={false}
-            onClick={() => onDelete(row.id)}
+            onPress={() => onDelete(row.id)}
           />
         </View>
       </View>

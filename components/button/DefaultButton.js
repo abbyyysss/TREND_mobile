@@ -20,6 +20,7 @@ export default function DefaultButton({
   isInfo = false,
   loading = false,
   disabled = false,
+  fontSize,
   style,
   textStyle,
 }) {

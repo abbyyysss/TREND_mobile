@@ -65,6 +65,7 @@ export default function SummaryCard({ onOpenMonthlyReport, reportStatus }) {
     subtitle: {
       color: '#757575',
       fontSize: 11,
+      fontFamily: fonts.gotham,
       marginTop: 2,
     },
     subtitleMd: {
@@ -86,6 +87,7 @@ export default function SummaryCard({ onOpenMonthlyReport, reportStatus }) {
     },
     disclaimerMd: {
       fontSize: 14,
+      fontFamily : fonts.gotham,
       lineHeight: 20,
     },
   });
