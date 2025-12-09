@@ -9,13 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "UILaunchScreen": {
-          "UIColorName": "SplashScreenBackground",
-          "UIImageName": "SplashScreenLogo"
-        }
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -35,12 +29,11 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/TREND/trend.webp",
-          "imageWidth": 220,
+          "imageWidth": 140,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "red",
           "dark": {
-            "image": "./assets/images/TREND/trend.webp",
-            "backgroundColor": "#1a1a1a"
+            "backgroundColor": "#000000"
           }
         }
       ],
@@ -50,11 +43,6 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "splash": {
-      "image": "./assets/images/TREND/trend.webp",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
     }
   }
 }
