@@ -27,7 +27,7 @@ import LoadingSnackbar from '../snackbar/LoadingSnackbar';
 import MainSnackbar from '../snackbar/MainSnackbar';
 
 export default function MonthlyReportModal({
- open,
+  open,
   onClose,
   mode,
   rowData,
@@ -88,7 +88,7 @@ export default function MonthlyReportModal({
   const [nationalityFieldModes, setNationalityFieldModes] = useState({});
   const [nationalities, setNationalities] = useState([]);
   const [selectedNationality, setSelectedNationality] = useState('');
-  const [totalGuests, setTotalGuests] = useState(0);
+  const [totalGuests, setTotalGuests] = useState('0');
 
   const [errors, setErrors] = useState({});
 
@@ -101,7 +101,7 @@ export default function MonthlyReportModal({
 
   const handleFormDataChange = (field) => (value) => {
     const numValue = Math.max(0, Number(value) || 0);
-    setFormData({ ...formData, [field]: numValue });
+    setFormData({ ...formData, [field]: String(numValue) });
 
     if (errors[field]) {
       setErrors({ ...errors, [field]: null });
@@ -111,18 +111,21 @@ export default function MonthlyReportModal({
   const fetchReportData = async (reportId) => {
     setIsFetchingReport(true);
     try {
+      console.log('Fetching report data for ID:', reportId);
       const reportData = await reportService.fetchMonthlyReportById(reportId);
+      console.log('Fetched report data:', reportData);
 
+      // Set form data with proper string conversion
       setFormData({
         month: reportData.month || '',
         ae_profile_id: reportData.ae_profile?.id || reportData.ae_profile,
-        philippine_guests: reportData.philippine_guests || '',
-        philippine_guest_nights: reportData.philippine_guest_nights || '',
-        foreign_guests: reportData.foreign_guests || '',
-        foreign_guest_nights: reportData.foreign_guest_nights || '',
-        philippine_ofw_guests: reportData.philippine_ofw_guests || '',
-        philippine_ofw_nights: reportData.philippine_ofw_nights || '',
-        rooms_occupied: reportData.rooms_occupied || '',
+        philippine_guests: String(Number(reportData.philippine_guests) || 0),
+        philippine_guest_nights: String(Number(reportData.philippine_guest_nights) || 0),
+        foreign_guests: String(Number(reportData.foreign_guests) || 0),
+        foreign_guest_nights: String(Number(reportData.foreign_guest_nights) || 0),
+        philippine_ofw_guests: String(Number(reportData.philippine_ofw_guests) || 0),
+        philippine_ofw_nights: String(Number(reportData.philippine_ofw_nights) || 0),
+        rooms_occupied: String(Number(reportData.rooms_occupied) || 0),
       });
 
       const updatedGuestCounts = {
@@ -148,50 +151,52 @@ export default function MonthlyReportModal({
 
       (reportData.nationality_breakdown || []).forEach((nat) => {
         const nationalityValue = nat.country;
+        const maleCount = String(Number(nat.male_count) || 0);
+        const femaleCount = String(Number(nat.female_count) || 0);
+        const totalCount = String(Number(nat.total) || 0);
+
+        console.log('Processing nationality:', {
+          country: nationalityValue,
+          subcategory: nat.filipino_subcategory,
+          male: maleCount,
+          female: femaleCount,
+          total: totalCount
+        });
 
         if (nationalityValue === 'Philippines') {
           if (nat.filipino_subcategory === 'Non-OFW') {
-            const maleCount = String(Number(nat.male_count) || 0);
-            const femaleCount = String(Number(nat.female_count) || 0);
             updatedGuestCounts.filipinoMale = maleCount;
             updatedGuestCounts.filipinoFemale = femaleCount;
-            updatedGuestCounts.filipinoTotal = String(Number(nat.total) || 0);
+            updatedGuestCounts.filipinoTotal = totalCount;
 
             if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
               updatedFieldModes.filipino = 'disaggregated';
-            } else if (Number(updatedGuestCounts.filipinoTotal) > 0) {
+            } else if (Number(totalCount) > 0) {
               updatedFieldModes.filipino = 'total';
             }
           } else if (nat.filipino_subcategory === 'OFW') {
-            const maleCount = String(Number(nat.male_count) || 0);
-            const femaleCount = String(Number(nat.female_count) || 0);
             updatedGuestCounts.ofwMale = maleCount;
             updatedGuestCounts.ofwFemale = femaleCount;
-            updatedGuestCounts.ofwTotal = String(Number(nat.total) || 0);
+            updatedGuestCounts.ofwTotal = totalCount;
 
             if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
               updatedFieldModes.ofw = 'disaggregated';
-            } else if (Number(updatedGuestCounts.ofwTotal) > 0) {
+            } else if (Number(totalCount) > 0) {
               updatedFieldModes.ofw = 'total';
             }
           } else if (nat.filipino_subcategory === 'Foreigner') {
-            const maleCount = String(Number(nat.male_count) || 0);
-            const femaleCount = String(Number(nat.female_count) || 0);
             updatedGuestCounts.foreignMale = maleCount;
             updatedGuestCounts.foreignFemale = femaleCount;
-            updatedGuestCounts.foreignTotal = String(Number(nat.total) || 0);
+            updatedGuestCounts.foreignTotal = totalCount;
 
             if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
               updatedFieldModes.foreign = 'disaggregated';
-            } else if (Number(updatedGuestCounts.foreignTotal) > 0) {
+            } else if (Number(totalCount) > 0) {
               updatedFieldModes.foreign = 'total';
             }
           }
         } else {
-          const maleCount = String(Number(nat.male_count) || 0);
-          const femaleCount = String(Number(nat.female_count) || 0);
-          const totalCount = String(Number(nat.total) || 0);
-
+          // Other nationalities
           if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
             updatedNationalityFieldModes[nationalityValue] = 'disaggregated';
           } else if (Number(totalCount) > 0) {
@@ -209,6 +214,10 @@ export default function MonthlyReportModal({
           });
         }
       });
+
+      console.log('Updated guest counts:', updatedGuestCounts);
+      console.log('Updated field modes:', updatedFieldModes);
+      console.log('Other nationalities:', otherNationalities);
 
       setGuestCounts(updatedGuestCounts);
       setFieldModes(updatedFieldModes);
@@ -262,6 +271,7 @@ export default function MonthlyReportModal({
     setNationalities([]);
     setSelectedNationality('');
     setErrors({});
+    setTotalGuests('0');
   };
 
   useEffect(() => {
@@ -292,50 +302,43 @@ export default function MonthlyReportModal({
 
         (rowData.nationalities || []).forEach((nat) => {
           const nationalityValue = nat.nationality_name;
+          const maleCount = String(Number(nat.male_count) || 0);
+          const femaleCount = String(Number(nat.female_count) || 0);
+          const totalCount = String((Number(nat.male_count) || 0) + (Number(nat.female_count) || 0));
 
           if (nationalityValue === 'Philippines') {
             if (nat.filipino_subcategory === 'Non-OFW') {
-              const maleCount = String(Number(nat.male_count) || 0);
-              const femaleCount = String(Number(nat.female_count) || 0);
               updatedGuestCounts.filipinoMale = maleCount;
               updatedGuestCounts.filipinoFemale = femaleCount;
-              updatedGuestCounts.filipinoTotal = String(Number(maleCount) + Number(femaleCount));
+              updatedGuestCounts.filipinoTotal = totalCount;
 
               if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
                 updatedFieldModes.filipino = 'disaggregated';
-              } else if (Number(updatedGuestCounts.filipinoTotal) > 0) {
+              } else if (Number(totalCount) > 0) {
                 updatedFieldModes.filipino = 'total';
               }
             } else if (nat.filipino_subcategory === 'OFW') {
-              const maleCount = String(Number(nat.male_count) || 0);
-              const femaleCount = String(Number(nat.female_count) || 0);
               updatedGuestCounts.ofwMale = maleCount;
               updatedGuestCounts.ofwFemale = femaleCount;
-              updatedGuestCounts.ofwTotal = String(Number(maleCount) + Number(femaleCount));
+              updatedGuestCounts.ofwTotal = totalCount;
 
               if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
                 updatedFieldModes.ofw = 'disaggregated';
-              } else if (Number(updatedGuestCounts.ofwTotal) > 0) {
+              } else if (Number(totalCount) > 0) {
                 updatedFieldModes.ofw = 'total';
               }
             } else if (nat.filipino_subcategory === 'Foreigner') {
-              const maleCount = String(Number(nat.male_count) || 0);
-              const femaleCount = String(Number(nat.female_count) || 0);
               updatedGuestCounts.foreignMale = maleCount;
               updatedGuestCounts.foreignFemale = femaleCount;
-              updatedGuestCounts.foreignTotal = String(Number(maleCount) + Number(femaleCount));
+              updatedGuestCounts.foreignTotal = totalCount;
 
               if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
                 updatedFieldModes.foreign = 'disaggregated';
-              } else if (Number(updatedGuestCounts.foreignTotal) > 0) {
+              } else if (Number(totalCount) > 0) {
                 updatedFieldModes.foreign = 'total';
               }
             }
           } else {
-            const maleCount = String(Number(nat.male_count) || 0);
-            const femaleCount = String(Number(nat.female_count) || 0);
-            const totalCount = String(Number(maleCount) + Number(femaleCount));
-
             if (Number(maleCount) > 0 || Number(femaleCount) > 0) {
               updatedNationalityFieldModes[nationalityValue] = 'disaggregated';
             } else if (Number(totalCount) > 0) {
@@ -380,7 +383,7 @@ export default function MonthlyReportModal({
       total += Number(n.male_count || 0) + Number(n.female_count || 0);
     });
 
-    setTotalGuests(total);
+    setTotalGuests(String(total));
   }, [guestCounts, nationalities]);
 
   const handleGuestCountChange = (field, type) => (value) => {
@@ -641,6 +644,8 @@ export default function MonthlyReportModal({
         nationalities: nationalitiesData,
       };
 
+      console.log('Submitting monthly report:', submitData);
+
       await reportService.submit(submitData, reportMode, mode === 'edit' ? rowData?.id : null);
 
       if (refreshLogs) {
@@ -707,7 +712,7 @@ export default function MonthlyReportModal({
                 <MainTextInput
                   label="Total no. of domestic guest check-ins"
                   type="number"
-                  variant = "outlined"
+                  variant="outlined"
                   size="small"
                   shrink
                   value={formData.philippine_guests}
@@ -720,7 +725,7 @@ export default function MonthlyReportModal({
                 <MainTextInput
                   label="Total no. of domestic guest nights"
                   type="number"
-                  variant = "outlined"
+                  variant="outlined"
                   size="small"
                   shrink
                   value={formData.philippine_guest_nights}
@@ -732,7 +737,7 @@ export default function MonthlyReportModal({
 
                 <MainTextInput
                   label="Total no. of foreign guest check-ins"
-                  variant = "outlined"
+                  variant="outlined"
                   type="number"
                   size="small"
                   shrink
@@ -745,7 +750,7 @@ export default function MonthlyReportModal({
 
                 <MainTextInput
                   label="Total no. of foreign guest nights"
-                  variant = "outlined"
+                  variant="outlined"
                   type="number"
                   size="small"
                   shrink
@@ -758,7 +763,7 @@ export default function MonthlyReportModal({
 
                 <MainTextInput
                   label="Total no. of ofw guest check-ins"
-                  variant = "outlined"
+                  variant="outlined"
                   type="number"
                   size="small"
                   shrink
@@ -771,7 +776,7 @@ export default function MonthlyReportModal({
 
                 <MainTextInput
                   label="Total no. of ofw guest nights"
-                  variant = "outlined"
+                  variant="outlined"
                   type="number"
                   size="small"
                   shrink
@@ -785,7 +790,7 @@ export default function MonthlyReportModal({
                 <MainTextInput
                   label="Total no. of rooms occupied"
                   type="number"
-                  variant = "outlined"
+                  variant="outlined"
                   size="small"
                   shrink
                   value={formData.rooms_occupied}
@@ -1045,9 +1050,9 @@ export default function MonthlyReportModal({
                       setSelectedNationality('');
                     }}
                     options={nationalityOptions
-                      .filter((opt) => !nationalities.find((n) => n.nationality === opt))
+                      .filter((opt) => opt !== 'Philippines' && !nationalities.find((n) => n.nationality === opt))
                       .map((opt) => ({ value: opt, label: opt }))}
-                     placeholder="Select nationality"
+                    placeholder="Select nationality"
                   />
                 )}
 
@@ -1062,29 +1067,29 @@ export default function MonthlyReportModal({
                 />
 
                 {/* Action Buttons */}
-                  <View style={{ 
-                    flexDirection: 'row', 
-                    gap: spacing.md,  
-                    marginBottom: spacing.xl 
-                  }}>
-                    {!isViewMode && (
-                      <View style={{ flex: 1 }}>
-                        <DefaultButton
-                          label={isSubmitting ? <LoadingText text="Submitting..." /> : 'Submit'}
-                          onPress={() => setOpenConfirmationModal(true)}
-                          disabled={isSubmitting}
-                        />
-                      </View>
-                    )}
+                <View style={{ 
+                  flexDirection: 'row', 
+                  gap: spacing.md,  
+                  marginBottom: spacing.xl 
+                }}>
+                  {!isViewMode && (
                     <View style={{ flex: 1 }}>
                       <DefaultButton
-                        label={isViewMode ? 'Close' : 'Cancel'}
-                        onPress={onClose}
-                        isRed={!isViewMode}
-                        disabled={isSubmitting && !isViewMode}
+                        label={isSubmitting ? <LoadingText text="Submitting..." /> : 'Submit'}
+                        onPress={() => setOpenConfirmationModal(true)}
+                        disabled={isSubmitting}
                       />
                     </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <DefaultButton
+                      label={isViewMode ? 'Close' : 'Cancel'}
+                      onPress={onClose}
+                      isRed={!isViewMode}
+                      disabled={isSubmitting && !isViewMode}
+                    />
                   </View>
+                </View>
               </ScrollView>
             )}
           </View>
