@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
-  useColorScheme,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
+import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function MainSnackbar({
   open,
@@ -17,10 +17,10 @@ export default function MainSnackbar({
   severity = 'info',
   duration = 4000,
   onClose = () => {},
-  position = 'bottom-right', // 'top-center', 'bottom-center', 'bottom-right', etc.
+  position = 'bottom-right',
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, isDark, fonts } = useTheme();
+
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(50)).current;
 
@@ -40,9 +40,7 @@ export default function MainSnackbar({
       ]).start();
 
       if (duration > 0) {
-        const timer = setTimeout(() => {
-          handleClose();
-        }, duration);
+        const timer = setTimeout(() => handleClose(), duration);
         return () => clearTimeout(timer);
       }
     } else {
@@ -62,7 +60,7 @@ export default function MainSnackbar({
         duration: 200,
         useNativeDriver: true,
       }),
-    ]).start(() => onClose());
+    ]).start(onClose);
   };
 
   if (!open && fadeAnim._value === 0) return null;
@@ -104,14 +102,22 @@ export default function MainSnackbar({
       <AntDesign
         name={severityIcons[severity]}
         size={20}
-        color="#FFFFFF"
+        color={colors.primaryForeground}
         style={styles.icon}
       />
-      <Text style={styles.message} numberOfLines={2}>
+
+      <Text
+        style={[
+          styles.message,
+          { fontFamily: fonts.gotham, color: colors.primaryForeground },
+        ]}
+        numberOfLines={2}
+      >
         {message}
       </Text>
+
       <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-        <AntDesign name="close" size={18} color="#FFFFFF" />
+        <AntDesign name="close" size={18} color={colors.primaryForeground} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -126,10 +132,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     maxWidth: Dimensions.get('window').width - 40,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
     elevation: 5,
     zIndex: 9999,
   },
@@ -138,7 +140,6 @@ const styles = StyleSheet.create({
   },
   message: {
     flex: 1,
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
   },

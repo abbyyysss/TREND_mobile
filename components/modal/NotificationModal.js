@@ -11,7 +11,7 @@ import DefaultButton from '../button/DefaultButton';
 import { useTheme } from '@/assets/theme/ThemeContext';
 
 export default function NotificationModal({ open, onClose, label, description }) {
-  const { colors, spacing, typography, radius, isDark } = useTheme();
+  const { colors, fonts, spacing, typography, radius, isDark } = useTheme();
 
   return (
     <Modal
@@ -55,6 +55,7 @@ export default function NotificationModal({ open, onClose, label, description })
                   {
                     color: isDark ? '#d1d5db' : '#111827',
                     fontSize: typography.fontSize.sm,
+                    fontFamily: fonts.gotham
                   },
                 ]}
               >
