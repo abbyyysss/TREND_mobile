@@ -232,7 +232,7 @@ export default function ComparisonDateInput({
               style={[
                 compStyles.buttonText,
                 {
-                  fontSize: typography.fontSize.sm - 1,
+                  fontSize: typography.fontSize.md - 1,
                   color: colors.text,
                   fontFamily: fonts.gotham,
                 },
@@ -245,7 +245,7 @@ export default function ComparisonDateInput({
               style={[
                 compStyles.arrow,
                 {
-                  fontSize: typography.fontSize.xs,
+                  fontSize: typography.fontSize.md,
                   color: colors.text,
                   fontFamily: fonts.gotham,
                 },
@@ -413,7 +413,8 @@ export default function ComparisonDateInput({
 }
 
 const compStyles = StyleSheet.create({
-  container: {},
+  container: {
+  },
   label: {
     fontWeight: '400',
   },

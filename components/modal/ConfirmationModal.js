@@ -21,7 +21,7 @@ export default function ConfirmationModal({
   cancelButtonLabel = 'Cancel',
 }) {
   const [openNotificationModal, setOpenNotificationModal] = useState(false);
-  const { colors, spacing, typography, radius, isDark } = useTheme();
+  const { colors, spacing, typography, radius, isDark, fonts } = useTheme();
 
   const handleSaveChanges = () => {
     // Optionally do validation here
@@ -43,7 +43,7 @@ export default function ConfirmationModal({
               {
                 backgroundColor: isDark ? '#000' : '#fff',
                 borderColor: '#DADADA',
-                borderRadius: radius.xl,
+                borderRadius: radius.lg,
               },
             ]}
             onPress={(e) => e.stopPropagation()}
@@ -71,6 +71,7 @@ export default function ConfirmationModal({
                     {
                       color: isDark ? '#d1d5db' : '#111827',
                       fontSize: typography.fontSize.sm,
+                      fontFamily: fonts.gotham
                     },
                   ]}
                 >

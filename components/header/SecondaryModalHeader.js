@@ -12,8 +12,8 @@ export default function SecondaryModalHeader({ onClose, label }) {
       styles.container,
       { 
         backgroundColor: colors.secondary,
-        borderTopLeftRadius: radius.lg,
-        borderTopRightRadius: radius.lg,
+        borderTopLeftRadius: radius.xl,
+        borderTopRightRadius: radius.xl,
       }
     ]}>
       <Text style={[
@@ -54,6 +54,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   closeButton: {
-    padding: 4,
+    padding: -3,
   },
 });
