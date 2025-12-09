@@ -4,10 +4,9 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  useColorScheme,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';  
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { format, eachMonthOfInterval, startOfMonth, subMonths, subYears } from 'date-fns';
 import ComparisonDateInput from '@/components/input/ComparisonDateInput';
 import MonthYearInput from '@/components/input/MonthYearInput';
@@ -17,27 +16,19 @@ import MainCard from '@/components/card/MainCard';
 import VisitorGrowthRateChart from '@/components/chart/VisitorGrowthRateChart';
 import MarketSourceChart from '@/components/chart/MarketSourceChart';
 import OccupancyRateChart from '@/components/chart/OccupancyRateChart';
+import LoadingOverlay from '@/components/loading/LoadingOverlay';
+import NoResultsText from '@/components/text/NoResultsText';
 import ObservationCard from '@/components/card/ObservationCard';
 import { formatCompactNumber, formatReadableNumber } from '@/utils/numberFormatter';
+import { fetchDashboardData } from '@/services/DashboardService';
 import { useTheme } from '@/assets/theme/ThemeContext';
-// import { fetchDashboardData } from './service/dashboardService';
 
-console.log('ComparisonDateInput:', ComparisonDateInput);
-console.log('MonthYearInput:', MonthYearInput);
-console.log('ComparisonCard:', ComparisonCard);
-console.log('TouristTypeChart:', TouristTypeChart);
-console.log('MainCard:', MainCard);
-console.log('VisitorGrowthRateChart:', VisitorGrowthRateChart);
-console.log('MarketSourceChart:', MarketSourceChart);
-console.log('OccupancyRateChart:', OccupancyRateChart);
-console.log('ObservationCard:', ObservationCard);
+export default function DashboardLayout() {
+  const { colors, isDark } = useTheme();
 
-export default function Dashboard() {
-  const { colors, fonts, isDark } = useTheme();
-  
   const [dashboardData, setDashboardData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Changed to false for UI testing
-  
+  const [isLoading, setIsLoading] = useState(true);
+
   const [availablePeriods] = useState(() =>
     eachMonthOfInterval({
       start: subYears(startOfMonth(new Date()), 15),
@@ -51,9 +42,8 @@ export default function Dashboard() {
 
   const prevDepsRef = useRef(null);
 
-  // COMMENTED OUT: API DATA FETCHING - FOR UI FOCUS
-  /*
   useEffect(() => {
+    // Dependencies used for ref comparison
     const deps = {
       selectedMonthYear: format(selectedMonthYear, 'yyyy-MM'),
       compareMode,
@@ -67,6 +57,7 @@ export default function Dashboard() {
     const loadData = async () => {
       setIsLoading(true);
       try {
+        // Determine compare date based on mode
         let calculatedCompareDate = compareDate;
         if (compareMode === 'Last month') {
           calculatedCompareDate = startOfMonth(subMonths(selectedMonthYear, 1));
@@ -74,6 +65,7 @@ export default function Dashboard() {
           calculatedCompareDate = startOfMonth(subYears(selectedMonthYear, 1));
         }
 
+        // Only update state when not custom range
         if (compareMode !== 'Custom range') {
           setCompareDate(calculatedCompareDate);
         }
@@ -102,55 +94,6 @@ export default function Dashboard() {
 
     loadData();
   }, [selectedMonthYear, compareMode, compareDate]);
-  */
-
-  // MOCK DATA FOR UI TESTING - Replace with real data later
-  useEffect(() => {
-    // Simulate data loading
-    const mockData = {
-      period: format(selectedMonthYear, 'yyyy-MM'),
-      compare_period: format(compareDate, 'yyyy-MM'),
-      kpis: {
-        total_arrivals: { value: 125430, compare: 111500, pct_change: 12.5 },
-        total_guest_nights: { value: 345678, compare: 320000, pct_change: 8.0 },
-        total_rooms_occupied: { value: 45678, compare: 43000, pct_change: 6.2 },
-        average_occupancy_rate: { value: 72.5, compare: 68.3, pct_change: 6.1 },
-        average_length_of_stay: { value: 2.75, compare: 2.87, pct_change: -4.2 },
-      },
-      growth_rate: [
-        { month: '2024-01', current: 10, previous: 8 },
-        { month: '2024-02', current: 15, previous: 12 },
-        { month: '2024-03', current: 12, previous: 10 },
-        { month: '2024-04', current: 18, previous: 15 },
-        { month: '2024-05', current: 20, previous: 18 },
-        { month: '2024-06', current: 16, previous: 14 },
-      ],
-      domestic_foreign_ofw: [
-        { month: '2024-01', domestic: { count: 100 }, foreign: { count: 80 }, ofw: { count: 30 } },
-        { month: '2024-02', domestic: { count: 120 }, foreign: { count: 90 }, ofw: { count: 35 } },
-        { month: '2024-03', domestic: { count: 110 }, foreign: { count: 85 }, ofw: { count: 32 } },
-        { month: '2024-04', domestic: { count: 130 }, foreign: { count: 95 }, ofw: { count: 38 } },
-        { month: '2024-05', domestic: { count: 140 }, foreign: { count: 100 }, ofw: { count: 40 } },
-        { month: '2024-06', domestic: { count: 125 }, foreign: { count: 90 }, ofw: { count: 35 } },
-      ],
-      top_nationalities: [
-        { country: 'UNITED STATES', current: 45000, pct_change: 12.5 },
-        { country: 'JAPAN', current: 38000, pct_change: -5.2 },
-        { country: 'SOUTH KOREA', current: 35000, pct_change: 8.3 },
-        { country: 'CHINA', current: 32000, pct_change: 15.7 },
-        { country: 'AUSTRALIA', current: 28000, pct_change: -3.1 },
-      ],
-      occupancy_rate_comp: [
-        { month: '2024-01', ae_occupancy: 65, city_occupancy: 58 },
-        { month: '2024-02', ae_occupancy: 72, city_occupancy: 65 },
-        { month: '2024-03', ae_occupancy: 68, city_occupancy: 62 },
-        { month: '2024-04', ae_occupancy: 75, city_occupancy: 70 },
-      ],
-      notes_obs: 'Strong performance in Q2 with significant growth in international arrivals. Domestic tourism shows steady growth. Recommend focusing on off-peak season promotions.',
-    };
-    
-    setDashboardData(mockData);
-  }, [selectedMonthYear, compareDate]);
 
   const transformedData = useMemo(() => {
     if (!dashboardData || dashboardData.error || dashboardData.noData) return null;
@@ -338,7 +281,7 @@ export default function Dashboard() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, isDark && styles.safeAreaDark]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -367,24 +310,11 @@ export default function Dashboard() {
 
         {/* Loading State */}
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={isDark ? '#D4AF37' : '#EBC855'} />
-            <Text style={[styles.loadingText, isDark && styles.loadingTextDark]}>
-              Loading dashboard data...
-            </Text>
-          </View>
+          <LoadingOverlay message="Loading dashboard data..." />
         ) : dashboardData?.error ? (
-          <View style={styles.errorContainer}>
-            <Text style={[styles.errorText, isDark && styles.errorTextDark]}>
-              Failed to load data. Please try again later.
-            </Text>
-          </View>
+          <NoResultsText text="Failed to load data. Please try again later." />
         ) : dashboardData?.noData ? (
-          <View style={styles.errorContainer}>
-            <Text style={[styles.errorText, isDark && styles.errorTextDark]}>
-              No results found for the selected period.
-            </Text>
-          </View>
+          <NoResultsText text="No results found for the selected period." />
         ) : (
           <>
             {/* KPI Cards */}
@@ -407,10 +337,6 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  safeAreaDark: {
-    backgroundColor: '#000',
   },
   scrollView: {
     flex: 1,
@@ -432,34 +358,6 @@ const styles = StyleSheet.create({
   comparisonPicker: {
     width: '100%',
     zIndex: 2000,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  loadingText: {
-    marginTop: 15,
-    fontSize: 16,
-    color: '#313638',
-  },
-  loadingTextDark: {
-    color: '#d2d2d2',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  errorText: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#313638',
-  },
-  errorTextDark: {
-    color: '#d2d2d2',
   },
   kpiContainer: {
     marginBottom: 25,

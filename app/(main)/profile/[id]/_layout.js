@@ -74,7 +74,6 @@ export default function ProfileLayout() {
 
   const displayName = useMemo(() => {
     if (loading) return 'Loading...';
-    if (role === 'DOT') return `Department of Tourism - ${profile?.region || 'Region'}`;
     if (role === 'AE') return profile?.establishment_name || profile?.business_name || account?.username || 'Profile';
     return account?.username || 'Profile';
   }, [loading, role, profile, account]);

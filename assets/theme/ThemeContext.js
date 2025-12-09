@@ -60,6 +60,7 @@ export const spacing = {
 // Typography scale
 export const typography = {
   fontSize: {
+    xxs: 9,
     xs: 12,
     sm: 14,
     md: 16,

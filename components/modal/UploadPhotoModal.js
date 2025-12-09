@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Modal } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '@/assets/theme/ThemeContext';
 import SecondaryModalHeader from '@/components/header/SecondaryModalHeader';
 import DefaultButton from '../button/DefaultButton';
@@ -18,26 +19,46 @@ export default function UploadPhotoModal({ open, onClose, label, description }) 
   const [loading, setLoading] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [snack, setSnack] = useState(null);
-  const fileInputRef = useRef(null);
 
   const labelDesc = `UPLOAD ${label}`;
 
-  const handleClickUploadArea = () => {
-    fileInputRef.current?.click();
-  };
+  const handleClickUploadArea = async () => {
+    try {
+      // Request permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        setSnack({ 
+          message: 'Permission to access gallery is required!', 
+          severity: 'error' 
+        });
+        return;
+      }
 
-  const handleFileChange = (e) => {
-    const file = e.target?.files?.[0] || e;
-    if (file) setUploadedFile(file);
-  };
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 1,
+      });
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const file = e.dataTransfer?.files?.[0];
-    if (file) setUploadedFile(file);
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        // Convert to File object for FormData
+        const file = {
+          uri: asset.uri,
+          name: asset.fileName || `photo_${Date.now()}.jpg`,
+          type: asset.mimeType || 'image/jpeg',
+        };
+        setUploadedFile(file);
+      }
+    } catch (err) {
+      console.error('❌ Image picker error:', err);
+      setSnack({ 
+        message: 'Failed to pick image. Please try again.', 
+        severity: 'error' 
+      });
+    }
   };
-
-  const handleDragOver = (e) => e.preventDefault();
 
   const handleSave = async () => {
     if (!uploadedFile) {
@@ -153,11 +174,6 @@ export default function UploadPhotoModal({ open, onClose, label, description }) 
                   <UploadButton
                     label="Click to upload or drag and drop."
                     onClick={handleClickUploadArea}
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
                     isPhoto={true}
                     withHelperText={true}
                     styles={{
@@ -186,7 +202,7 @@ export default function UploadPhotoModal({ open, onClose, label, description }) 
                       label={loading ? 'SAVING...' : 'SAVE CHANGES'}
                       onPress={handleSave}
                       disabled={loading}
-                      fontSize={13}
+                      fontSize={11}
                       paddingVertical={7}
                       paddingHorizontal={10}
                       fullWidth={true}

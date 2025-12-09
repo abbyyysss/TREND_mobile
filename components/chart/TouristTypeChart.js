@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, useColorScheme, ScrollView } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
+import { useTheme } from '@/assets/theme/ThemeContext';
 import { formatCompactNumber, formatReadableNumber } from '@/utils/numberFormatter';
 
 export default function TouristTypeChart({
@@ -8,57 +9,30 @@ export default function TouristTypeChart({
   foreignData = [],
   ofwData = [],
   yLabel = 'Growth Rate (%)',
+  xLabel = 'Months',
   title = 'Tourist Types by Month',
+  titleTextSize = 'text-[14px] md:text-[16px]',
+  padding = 'p-[20px]',
+  hasInput = false,
+  isAnimationActive = false,
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  
-  const textColor = isDark ? '#CACDD6' : '#828898';
-  const backgroundColor = isDark ? '#1a1a1a' : '#ffffff';
+  const { colors, isDark, spacing, typography } = useTheme();
+  const [selectedBar, setSelectedBar] = useState(null);
 
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ];
 
-  // Prepare stacked bar data
-  const stackData = useMemo(() => {
-    return months.map((month, i) => {
-      const domestic = domesticData[i] ?? 0;
-      const foreign = foreignData[i] ?? 0;
-      const ofw = ofwData[i] ?? 0;
-      const total = domestic + foreign + ofw;
-
-      return {
-        value: domestic,
-        label: month,
-        spacing: 2,
-        labelWidth: 40,
-        labelTextStyle: { color: textColor, fontSize: 10 },
-        frontColor: '#FFB95A',
-        // Show total on top of stack
-        topLabelComponent: () => (
-          <Text style={{ fontSize: 9, color: textColor, marginBottom: 2 }}>
-            {formatCompactNumber(total)}
-          </Text>
-        ),
-        stacks: [
-          { value: domestic, color: '#FFB95A' },
-          { value: foreign, color: '#EF4444' },
-          { value: ofw, color: '#3B82F6' },
-        ],
-      };
-    });
-  }, [domesticData, foreignData, ofwData, textColor]);
-
-  // Calculate max value for Y-axis
+  // Find highest stacked total
   const highest = useMemo(() => {
     const totals = months.map((_, i) => 
-      (domesticData[i] ?? 0) + (foreignData[i] ?? 0) + (ofwData[i] ?? 0)
+      (domesticData[i] || 0) + (foreignData[i] || 0) + (ofwData[i] || 0)
     );
     return totals.length ? Math.max(...totals) : 0;
   }, [domesticData, foreignData, ofwData]);
 
+  // Smart rounded maximum
   const roundedMax = useMemo(() => {
     if (highest === 0) return 100;
     const magnitude = Math.pow(10, Math.floor(Math.log10(highest)));
@@ -75,116 +49,82 @@ export default function TouristTypeChart({
     return rounded * magnitude;
   }, [highest]);
 
-  return (
-    <View style={[styles.container, { backgroundColor }]}>
-      <Text style={[styles.title, { color: isDark ? '#E5E7EB' : '#313638' }]}>
-        {title}
-      </Text>
+  // Prepare stacked bar data
+  const stackData = months.map((month, i) => ({
+    stacks: [
+      { value: ofwData[i] || 0, color: '#3B82F6' },
+      { value: foreignData[i] || 0, color: '#EF4444' },
+      { value: domesticData[i] || 0, color: '#FFB95A' },
+    ],
+    label: month,
+    onPress: () => setSelectedBar({ month, index: i }),
+  }));
 
-      <View style={styles.chartWrapper}>
+  const textColor = isDark ? '#CACDD6' : '#828898';
+  const gridColor = isDark ? '#CACDD680' : '#82889880';
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.card }]}>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+
+      {selectedBar && (
+        <View style={[styles.tooltip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.tooltipLabel, { color: colors.text }]}>
+            {selectedBar.month}
+          </Text>
+          <Text style={[styles.tooltipValue, { color: '#FFB95A' }]}>
+            Domestic: {formatReadableNumber(domesticData[selectedBar.index])}
+          </Text>
+          <Text style={[styles.tooltipValue, { color: '#EF4444' }]}>
+            Foreign: {formatReadableNumber(foreignData[selectedBar.index])}
+          </Text>
+          <Text style={[styles.tooltipValue, { color: '#3B82F6' }]}>
+            OFW: {formatReadableNumber(ofwData[selectedBar.index])}
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.chartRow}>
         {yLabel && (
-          <View style={styles.yAxisLabel}>
-            <Text style={[styles.yAxisText, { color: textColor }]}>
-              {yLabel}
-            </Text>
+          <View style={styles.yLabelContainer}>
+            <Text style={[styles.yLabel, { color: textColor }]}>{yLabel}</Text>
           </View>
         )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-          <View style={styles.chartContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollView}>
+          <View style={styles.chartWrapper}>
             <BarChart
-              data={stackData}
-              height={220}
-              width={Math.max(months.length * 45, 300)}
+              stackData={stackData}
+              height={250}
+              width={Math.max(months.length * 45, 350)}
               maxValue={roundedMax}
               noOfSections={4}
-              stackData={stackData}
-              barWidth={28}
-              spacing={45}
-              initialSpacing={20}
-              endSpacing={20}
-              yAxisColor={textColor}
-              xAxisColor={textColor}
               yAxisTextStyle={{ color: textColor, fontSize: 11 }}
-              rulesColor={isDark ? 'rgba(202, 205, 214, 0.2)' : 'rgba(130, 136, 152, 0.2)'}
-              rulesType="solid"
-              formatYLabel={formatCompactNumber}
-              showValuesAsTopLabel={false}
-              // Enable press interaction
-              showStripOnPress
-              stripColor={isDark ? '#ffffff20' : '#00000020'}
-              stripWidth={1}
-              stripOpacity={0.3}
-              onPress={(item, index) => {
-                // Handle bar press
-              }}
-              renderTooltip={(item, index) => {
-                const monthIndex = Math.floor(index);
-                const domestic = domesticData[monthIndex] ?? 0;
-                const foreign = foreignData[monthIndex] ?? 0;
-                const ofw = ofwData[monthIndex] ?? 0;
-                const total = domestic + foreign + ofw;
-                
-                return (
-                  <View
-                    style={{
-                      backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-                      borderRadius: 8,
-                      padding: 10,
-                      borderWidth: 1,
-                      borderColor: isDark ? '#CACDD680' : '#82889880',
-                      minWidth: 120,
-                      marginBottom: 10,
-                      marginLeft: -40,
-                    }}
-                  >
-                    <Text style={{ color: textColor, fontSize: 11, fontWeight: '600', marginBottom: 6 }}>
-                      {months[monthIndex]}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#FFB95A', marginRight: 6 }} />
-                      <Text style={{ color: textColor, fontSize: 10 }}>
-                        Domestic: {formatReadableNumber(domestic)}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#EF4444', marginRight: 6 }} />
-                      <Text style={{ color: textColor, fontSize: 10 }}>
-                        Foreign: {formatReadableNumber(foreign)}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#3B82F6', marginRight: 6 }} />
-                      <Text style={{ color: textColor, fontSize: 10 }}>
-                        OFW: {formatReadableNumber(ofw)}
-                      </Text>
-                    </View>
-                    <View style={{ borderTopWidth: 1, borderTopColor: isDark ? '#CACDD640' : '#82889840', marginTop: 4, paddingTop: 4 }}>
-                      <Text style={{ color: textColor, fontSize: 10, fontWeight: '600' }}>
-                        Total: {formatReadableNumber(total)}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              }}
+              xAxisLabelTextStyle={{ color: textColor, fontSize: 10 }}
+              rulesColor={gridColor}
+              yAxisColor={gridColor}
+              xAxisColor={gridColor}
+              formatYLabel={(value) => formatCompactNumber(parseFloat(value))}
+              hideOrigin
+              spacing={35}
+              isAnimated={isAnimationActive}
             />
           </View>
         </ScrollView>
       </View>
 
-      {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-          <Text style={[styles.legendText, { color: textColor }]}>OFW</Text>
+          <View style={[styles.legendDot, { backgroundColor: '#FFB95A' }]} />
+          <Text style={[styles.legendText, { color: textColor }]}>Domestic</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
           <Text style={[styles.legendText, { color: textColor }]}>Foreign</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#FFB95A' }]} />
-          <Text style={[styles.legendText, { color: textColor }]}>Domestic</Text>
+          <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
+          <Text style={[styles.legendText, { color: textColor }]}>OFW</Text>
         </View>
       </View>
     </View>
@@ -193,52 +133,76 @@ export default function TouristTypeChart({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 20,
     borderRadius: 8,
+    marginVertical: 10,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 16,
   },
-  chartWrapper: {
+  chartRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  yAxisLabel: {
+  yLabelContainer: {
     width: 20,
-    height: 220,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 8,
   },
-  yAxisText: {
+  yLabel: {
     fontSize: 12,
     transform: [{ rotate: '-90deg' }],
-    width: 220,
+    width: 200,
     textAlign: 'center',
   },
-  chartContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  chartWrapper: {
     paddingVertical: 10,
   },
   legend: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
     flexWrap: 'wrap',
+    marginTop: 16,
+    gap: 16,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 12,
-    marginVertical: 4,
+    marginHorizontal: 8,
   },
   legendDot: {
     width: 12,
     height: 12,
-    borderRadius: 2,
+    borderRadius: 6,
     marginRight: 6,
   },
   legendText: {
     fontSize: 12,
+  },
+  tooltip: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  tooltipLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  tooltipValue: {
+    fontSize: 12,
+    marginVertical: 2,
+  },
+  barLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginBottom: 2,
   },
 });

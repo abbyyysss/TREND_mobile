@@ -1,18 +1,17 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-  useWindowDimensions,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-// import { useAuth } from '@/context/authContext';
-// import { AEReportMode } from '@/services/constants';
-import DefaultButton from '../button/DefaultButton';
-import DownloadButton from '../button/DownloadButton';
+import { useTheme } from '@/assets/theme/ThemeContext';
+import { styles, getThemedStyles } from '@/styles/tableStyles';
+import { useAuth } from '@/context/AuthContext';
+import { AEReportMode } from '@/services/Constants';
+import DefaultButton from '@/components/button/DefaultButton';
+import DownloadButton from '@/components/button/DownloadButton';
+import MonthlyReportService from '@/services/ReportService';
+import { formatReadableNumber } from '@/utils/numberFormatter';
+import { convertMonthToNumber } from '@/utils/dateUtils';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const statusColors = {
   Auto: '#3B82F6',
@@ -22,36 +21,59 @@ const statusColors = {
   Submitted: '#7CB530',
 };
 
-export default function AEReportsTable({
-  reports = [],
-  isAE = false,
-  isDOT = false,
-  onOpenMonthlyReport,
+export default function AEReportsTable({ 
+  reports = [], 
+  isAE = false, 
+  isDOT = false, 
+  onOpenMonthlyReport 
 }) {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const { width } = useWindowDimensions();
+  const { isDark, colors, fonts } = useTheme();
+  const themedStyles = getThemedStyles(isDark, colors, fonts);
 
-//   const { user, role } = useAuth();
-//   const u = user?.user_profile;
-//   const reportMode = role === 'AE' ? u?.report_mode : null;
+  const [openModal, setOpenModal] = useState(false);
+  const [modalMode, setModalMode] = useState('add');
+  const [selectedReport, setSelectedReport] = useState(null);
 
-  const isMdUp = width >= 768;
+  const { user, loading, role } = useAuth();
+  const u = user?.user_profile;
+  const aeType = role === 'AE' ? u?.type : null;
+  const reportMode = role === 'AE' ? u?.report_mode : null;
 
-  const theme = {
-    text: {
-      primary: isDark ? '#ffffff' : '#000000',
-      secondary: isDark ? '#9ca3af' : '#6b7280',
-    },
-    background: {
-      primary: isDark ? '#000000' : '#ffffff',
-      row: isDark ? '#1a1a1a' : '#f9fafb',
-    },
-    border: isDark ? '#374151' : '#e5e7eb',
+  const handleDownload = async (row) => {
+    try {
+      const monthNumber = convertMonthToNumber(row.month);
+      const period = `${row.year}-${monthNumber}-1`;
+
+      // Call the export API
+      const fileBlob = await MonthlyReportService.exportReports({
+        period,
+        ...(!isAE && { aeid: row.ae_id }),
+      });
+
+      // For React Native, convert blob to base64 and save
+      const reader = new FileReader();
+      reader.readAsDataURL(fileBlob);
+      reader.onloadend = async () => {
+        const base64data = reader.result.split(',')[1];
+        const filename = `${row.year}-${monthNumber} ${row.aeName} Tourism Report.xlsx`;
+        const fileUri = FileSystem.documentDirectory + filename;
+
+        await FileSystem.writeAsStringAsync(fileUri, base64data, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        // Share the file
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(fileUri);
+        }
+      };
+    } catch (error) {
+      console.error('Download error:', error);
+    }
   };
 
-  // Sort reports by year and month (newest first)
+  // Sort reports by year and month
   const sortedReports = [...reports].sort((a, b) => {
     const yearDiff = b.year - a.year;
     if (yearDiff !== 0) return yearDiff;
@@ -59,18 +81,8 @@ export default function AEReportsTable({
     const monthToNum = (month) => {
       if (typeof month === 'number') return month;
       const months = [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December',
       ];
       return months.indexOf(month) + 1;
     };
@@ -78,199 +90,142 @@ export default function AEReportsTable({
     return monthToNum(b.month) - monthToNum(a.month);
   });
 
-  const formatNumber = (num) => {
-    if (num == null) return '0';
-    return num.toLocaleString();
-  };
-
-  const handleViewPress = (row) => {
-    const path = isAE
-      ? `/reports-management/my-summary/${row.year}/${row.month}`
-      : `/reports-management/${row.ae_id}/${row.year}/${row.month}`;
-    router.push(path);
-  };
-
   return (
-    <View style={[styles.container, { backgroundColor: theme.background.primary }]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-        <View style={styles.table}>
+    <View style={styles.container}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={true}
+        style={styles.scrollView}
+      >
+        <View style={styles.tableContainer}>
           {/* Table Header */}
-          <View style={[styles.headerRow, { borderBottomColor: theme.border }]}>
-            <View style={[styles.cell, styles.columnPeriod]}>
-              <Text style={[styles.headerText, { color: theme.text.primary }]}>Period</Text>
+          <View style={[styles.tableHeader, themedStyles.tableHeader]}>
+            <View style={[styles.headerCell, { width: 100 }]}>
+              <Text style={[styles.headerText, themedStyles.headerText]}>Period</Text>
             </View>
-            <View style={[styles.cell, styles.columnNumber]}>
-              <Text style={[styles.headerText, { color: theme.text.primary }]}>
-                Available rooms
+            <View style={[styles.headerCell, styles.noOfGuestsCell]}>
+              <Text style={[styles.headerText, themedStyles.headerText]}>Available rooms</Text>
+            </View>
+            <View style={[styles.headerCell, { width: 180 }]}>
+              <Text style={[styles.headerText, themedStyles.headerText]}>
+                No. of rooms occupied
               </Text>
             </View>
-            <View style={[styles.cell, styles.columnNumber]}>
-              <Text style={[styles.headerText, { color: theme.text.primary }]}>
-                Rooms occupied
+            <View style={[styles.headerCell, { width: 200 }]}>
+              <Text style={[styles.headerText, themedStyles.headerText]}>
+                No. of guest check-ins
               </Text>
             </View>
-            <View style={[styles.cell, styles.columnNumber]}>
-              <Text style={[styles.headerText, { color: theme.text.primary }]}>
-                Guest check-ins
+            <View style={[styles.headerCell, { width: 200 }]}>
+              <Text style={[styles.headerText, themedStyles.headerText]}>
+                No. of guest nights
               </Text>
             </View>
-            <View style={[styles.cell, styles.columnNumber]}>
-              <Text style={[styles.headerText, { color: theme.text.primary }]}>Guest nights</Text>
+            <View style={[styles.headerCell, { width: 160 }]}>
+              <Text style={[styles.headerText, themedStyles.headerText]}>Status</Text>
             </View>
-            <View style={[styles.cell, styles.columnStatus]}>
-              <Text style={[styles.headerText, { color: theme.text.primary }]}>Status</Text>
-            </View>
-            <View style={[styles.cell, styles.columnActions]}>
-              <Text style={[styles.headerText, { color: theme.text.primary }]}>Actions</Text>
+            <View style={[styles.headerCell, { width: 180 }]}>
+              <Text style={[styles.headerText, themedStyles.headerText]}>Actions</Text>
             </View>
           </View>
 
           {/* Table Body */}
-          {sortedReports.length > 0 ? (
-            sortedReports.map((row, index) => (
-              <View
-                key={row.id}
-                style={[
-                  styles.bodyRow,
-                  {
-                    backgroundColor: index % 2 === 0 ? theme.background.primary : theme.background.row,
-                    borderBottomColor: theme.border,
-                  },
-                ]}
-              >
-                <View style={[styles.cell, styles.columnPeriod]}>
-                  <Text style={[styles.bodyText, { color: theme.text.primary }]}>
-                    {row.monthYear}
-                  </Text>
-                </View>
-                <View style={[styles.cell, styles.columnNumber]}>
-                  <Text style={[styles.bodyText, { color: theme.text.primary }]}>
-                    {formatNumber(row.availableRooms)}
-                  </Text>
-                </View>
-                <View style={[styles.cell, styles.columnNumber]}>
-                  <Text style={[styles.bodyText, { color: theme.text.primary }]}>
-                    {formatNumber(row.roomsOccupied)}
-                  </Text>
-                </View>
-                <View style={[styles.cell, styles.columnNumber]}>
-                  <Text style={[styles.bodyText, { color: theme.text.primary }]}>
-                    {formatNumber(row.totalGuests)}
-                  </Text>
-                </View>
-                <View style={[styles.cell, styles.columnNumber]}>
-                  <Text style={[styles.bodyText, { color: theme.text.primary }]}>
-                    {formatNumber(row.totalGuestNights)}
-                  </Text>
-                </View>
-                <View style={[styles.cell, styles.columnStatus]}>
-                  <Text style={[styles.bodyText, { color: statusColors[row.status] || theme.text.primary }]}>
-                    {row.status}
-                  </Text>
-                </View>
-                <View style={[styles.cell, styles.columnActions]}>
-                  <View style={styles.actionsContainer}>
-                    <DefaultButton
-                      label="View"
-                      isBlue={true}
-                      isTransparent={true}
-                      onPress={() => handleViewPress(row)}
-                      fontSize={12}
-                    />
-                    {isAE && reportMode === AEReportMode.MONTHLY && (
-                      <>
-                        {row.status === 'Pending' && (
-                          <DefaultButton
-                            label="Create"
-                            isTransparent={true}
-                            onPress={() => onOpenMonthlyReport('add', row)}
-                            fontSize={12}
-                          />
-                        )}
-                        {(row.status === 'Submitted' || row.status === 'Flagged') && (
-                          <DefaultButton
-                            label="Edit"
-                            isTransparent={true}
-                            onPress={() => onOpenMonthlyReport('edit', row)}
-                            fontSize={12}
-                          />
-                        )}
-                      </>
-                    )}
-                    <DownloadButton iconSize={20} />
+          <View style={styles.tableBody}>
+            {sortedReports.length > 0 ? (
+              sortedReports.map((row) => (
+                <View 
+                  key={row.id} 
+                  style={[styles.tableRow, themedStyles.tableRow]}
+                >
+                  <View style={[styles.cell, { width: 100 }]}>
+                    <Text style={[styles.cellText, themedStyles.cellText]}>
+                      {row.monthYear}
+                    </Text>
+                  </View>
+                  <View style={[styles.cell, styles.noOfGuestsCell]}>
+                    <Text style={[styles.cellText, themedStyles.cellText]}>
+                      {formatReadableNumber(row.availableRooms)}
+                    </Text>
+                  </View>
+                  <View style={[styles.cell, { width: 180 }]}>
+                    <Text style={[styles.cellText, themedStyles.cellText]}>
+                      {formatReadableNumber(row.roomsOccupied)}
+                    </Text>
+                  </View>
+                  <View style={[styles.cell, { width: 200 }]}>
+                    <Text style={[styles.cellText, themedStyles.cellText]}>
+                      {formatReadableNumber(row.totalGuests)}
+                    </Text>
+                  </View>
+                  <View style={[styles.cell, { width: 200 }]}>
+                    <Text style={[styles.cellText, themedStyles.cellText]}>
+                      {formatReadableNumber(row.totalGuestNights)}
+                    </Text>
+                  </View>
+                  <View style={[styles.cell, { width: 160 }]}>
+                    <Text 
+                      style={[
+                        styles.cellText, 
+                        themedStyles.cellText,
+                        { color: statusColors[row.status] || colors.text }
+                      ]}
+                    >
+                      {row.status}
+                    </Text>
+                  </View>
+                  <View style={[styles.cell, { width: 180 }]}>
+                    <View style={styles.actionsContainer}>
+                      <DefaultButton
+                        label="View"
+                        isBlue={true}
+                        isTransparent={true}
+                        fullWidth={false}
+                        onPress={() => {
+                          const path = isAE
+                            ? `/reports-management/my-summary/${row.year}/${row.month}`
+                            : `/reports-management/${row.ae_id}/${row.year}/${row.month}`;
+                          router.push(path);
+                        }}
+                      />
+                      {isAE && reportMode === AEReportMode.MONTHLY && (
+                        <>
+                          {row.status === 'Pending' && (
+                            <DefaultButton
+                              label="Create"
+                              isTransparent={true}
+                              fullWidth={false}
+                              onPress={() => onOpenMonthlyReport('add', row)}
+                            />
+                          )}
+                          {(row.status === 'Submitted' || row.status === 'Flagged') && (
+                            <DefaultButton
+                              label="Edit"
+                              isTransparent={true}
+                              fullWidth={false}
+                              onPress={() => onOpenMonthlyReport('edit', row)}
+                            />
+                          )}
+                        </>
+                      )}
+                      <DownloadButton
+                        iconSize={20}
+                        text="Export"
+                        onPress={() => handleDownload(row)}
+                      />
+                    </View>
                   </View>
                 </View>
+              ))
+            ) : (
+              <View style={styles.emptyStateContainer}>
+                <Text style={[styles.emptyStateText, themedStyles.emptyStateText]}>
+                  No reports found.
+                </Text>
               </View>
-            ))
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
-                No reports found.
-              </Text>
-            </View>
-          )}
+            )}
+          </View>
         </View>
       </ScrollView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  table: {
-    minWidth: 900,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 2,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-  },
-  bodyRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-  },
-  cell: {
-    justifyContent: 'center',
-    paddingHorizontal: 8,
-  },
-  columnPeriod: {
-    width: 120,
-  },
-  columnNumber: {
-    width: 140,
-  },
-  columnStatus: {
-    width: 100,
-  },
-  columnActions: {
-    width: 240,
-  },
-  headerText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  bodyText: {
-    fontSize: 13,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    paddingVertical: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-  },
-});

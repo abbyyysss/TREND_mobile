@@ -1,23 +1,17 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  useColorScheme,
-} from 'react-native';
-// import { useAuth } from '@/context/authContext';
-// import { AEReportMode } from '@/services/constants';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { useTheme } from '@/assets/theme/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { AEReportMode } from '@/services/Constants';
 
 export default function ReportFilterNav({ activeFilter, onFilterChange }) {
-//   const { user, role } = useAuth();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors, spacing, typography, radius, isDark } = useTheme();
+  const { user, role } = useAuth();
+  const u = user?.user_profile;
 
-//   const u = user?.user_profile;
-//   const aeType = role === 'AE' ? u?.type : null;
-//   const reportMode = role === 'AE' ? u?.report_mode : null;
+  // For AE role, we check the AEProfile and display the AE type and report mode
+  const aeType = role === 'AE' ? u?.type : null; // AEProfile contains the type field
+  const reportMode = role === 'AE' ? u?.report_mode : null; // AEProfile contains the report_mode field
 
   let filterOptions = ['All', 'Auto', 'Pending', 'Submitted', 'Flagged', 'Missing'];
 
@@ -29,79 +23,57 @@ export default function ReportFilterNav({ activeFilter, onFilterChange }) {
     }
   }
 
-  const theme = {
-    text: {
-      active: '#D4AF37',
-      inactive: isDark ? '#d5d6d7' : '#313638',
-    },
-    background: {
-      active: isDark ? '#0B0B0B' : '#F4F4F4',
-      inactive: 'transparent',
-    },
-    border: isDark ? '#666666' : '#9ca3af',
-  };
-
   return (
-    <View style={[styles.container, { borderColor: theme.border }]}>
+    <View
+      style={{
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.md,
+        overflow: 'hidden',
+      }}
+    >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{
+          flexDirection: 'row',
+        }}
       >
-        {filterOptions.map((filter) => (
-          <TouchableOpacity
-            key={filter}
-            style={[
-              styles.filterButton,
-              {
-                backgroundColor:
-                  activeFilter === filter
-                    ? theme.background.active
-                    : theme.background.inactive,
-              },
-            ]}
-            onPress={() => onFilterChange(filter)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                {
-                  color:
-                    activeFilter === filter
-                      ? theme.text.active
-                      : theme.text.inactive,
-                },
-              ]}
+        {filterOptions.map((filter, index) => {
+          const isActive = activeFilter === filter;
+          const isLastItem = index === filterOptions.length - 1;
+
+          return (
+            <TouchableOpacity
+              key={filter}
+              onPress={() => onFilterChange(filter)}
+              style={{
+                minWidth: 80,
+                paddingVertical: spacing.sm,
+                paddingHorizontal: spacing.md,
+                backgroundColor: isActive
+                  ? isDark
+                    ? '#0B0B0B'
+                    : '#F4F4F4'
+                  : 'transparent',
+                borderRightWidth: isLastItem ? 0 : 1,
+                borderRightColor: colors.border,
+              }}
             >
-              {filter}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={{
+                  color: isActive ? '#D4AF37' : colors.text,
+                  fontSize: typography.fontSize.sm,
+                  textAlign: 'center',
+                  fontWeight: typography.weight.medium,
+                }}
+              >
+                {filter}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    borderWidth: 1,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  scrollContent: {
-    flexDirection: 'row',
-  },
-  filterButton: {
-    paddingVertical: 7,
-    paddingHorizontal: 10,
-    minWidth: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  filterText: {
-    fontSize: 12,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-});

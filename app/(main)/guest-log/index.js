@@ -16,6 +16,7 @@ import LoadingSnackbar from '@/components/snackbar/LoadingSnackbar';
 import { formatDate } from '@/utils/dateUtils';
 import { useTheme } from '@/assets/theme/ThemeContext';
 
+
 export default function GuestLog() {
   const { colors, fonts, spacing } = useTheme();
   const { user, role } = useAuth();
