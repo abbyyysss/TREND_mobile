@@ -173,7 +173,7 @@ export default function AEReportsTable({
                       {row.status}
                     </Text>
                   </View>
-                  <View style={[styles.cell, { width: 180 }]}>
+                  <View style={[styles.cell, { width: 230}]}>
                     <View style={styles.actionsContainer}>
                       <DefaultButton
                         label="View"

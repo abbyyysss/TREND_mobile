@@ -38,14 +38,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconButton: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 25,
+    fontSize: 22,
     fontWeight: '600',
+    width: '85%',
+    textAlign: 'center',
   },
 });
